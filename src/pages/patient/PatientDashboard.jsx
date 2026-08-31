@@ -3,14 +3,22 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
   Brain, Sun, Calendar, Clock, Gamepad2, Heart,
-  Phone, AlertTriangle, Sparkles, ArrowRight,
+  MessageSquare, AlertTriangle, Sparkles, ArrowRight,
   Pill, UtensilsCrossed, Activity, Bell, Moon,
-  Camera, Star, Trophy
+  Camera, Star, Trophy, CheckCircle, MessageCircle,
+  Copy, Check
 } from 'lucide-react'
 import { useData } from '../../context/DataContext'
+import { useLanguage } from '../../i18n/LanguageContext'
 import Card from '../../components/ui/Card'
+import LanguageSelector from '../../components/ui/LanguageSelector'
 import SakshiAssistant from '../../components/sakshi/SakshiAssistant'
+import SmartwatchFloating from '../../components/smartwatch/SmartwatchFloating'
+import SmartwatchPanel from '../../components/smartwatch/SmartwatchPanel'
 import useScheduleReminder from '../../hooks/useScheduleReminder'
+import { getISTHour } from '../../utils/timezone'
+import BrahmiLogo from '../../components/ui/BrahmiLogo'
+import { sendEmergencySMS, isValidPhone } from '../../utils/emergencyService'
 
 const typeIcons = {
   medicine: Pill,
@@ -32,40 +40,17 @@ const typeColors = {
   drink: 'from-cyan-400 to-blue-600',
 }
 
-const gameCards = [
-  {
-    id: 1,
-    name: 'Memory Album',
-    icon: Camera,
-    color: 'from-blue-500 to-indigo-600',
-    bgColor: 'bg-blue-50',
-  },
-  {
-    id: 2,
-    name: 'Memory Tray',
-    icon: Sparkles,
-    color: 'from-emerald-500 to-teal-600',
-    bgColor: 'bg-emerald-50',
-  },
-  {
-    id: 3,
-    name: 'Face Match',
-    icon: Heart,
-    color: 'from-rose-500 to-pink-600',
-    bgColor: 'bg-rose-50',
-  },
-  {
-    id: 4,
-    name: 'Routine Order',
-    icon: Calendar,
-    color: 'from-amber-500 to-orange-600',
-    bgColor: 'bg-amber-50',
-  },
+const gameCardConfigs = [
+  { id: 1, titleKey: 'games.memoryAlbum.shortName', icon: Camera, color: 'from-blue-500 to-indigo-600', bgColor: 'bg-blue-50' },
+  { id: 2, titleKey: 'games.memoryTray.name', icon: Sparkles, color: 'from-emerald-500 to-teal-600', bgColor: 'bg-emerald-50' },
+  { id: 3, titleKey: 'games.faceMatch.shortName', icon: Heart, color: 'from-rose-500 to-pink-600', bgColor: 'bg-rose-50' },
+  { id: 4, titleKey: 'games.routineSequencer.shortName', icon: Calendar, color: 'from-amber-500 to-orange-600', bgColor: 'bg-amber-50' },
 ]
 
 export default function PatientDashboard() {
   const navigate = useNavigate()
-  const { patientData, schedule, memories, completedGames } = useData()
+  const { patientData, schedule, memories, completedGames, emergencyContact } = useData()
+  const { t } = useLanguage()
   const [reminderMessage, setReminderMessage] = useState(null)
 
   const handleReminder = useCallback((reminder) => {
@@ -75,7 +60,7 @@ export default function PatientDashboard() {
 
   useScheduleReminder(schedule, handleReminder)
 
-  const greeting = getGreeting()
+  const greeting = getGreeting(t)
   const completedCount = Object.keys(completedGames).length
   const totalMemories = memories.length
 
@@ -86,21 +71,20 @@ export default function PatientDashboard() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center shadow-lg shadow-primary-500/20">
-                <Brain size={20} className="text-white" />
-              </div>
+              <BrahmiLogo size={40} />
               <div>
                 <span className="font-bold text-gray-900 text-lg">
-                  Cogni<span className="gradient-text">Care</span>
+                  {t('common.appName')}
                 </span>
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <LanguageSelector compact />
               <button
                 onClick={() => navigate('/caregiver')}
                 className="px-4 py-2 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors"
               >
-                Caregiver
+                {t('patient.caregiver')}
               </button>
             </div>
           </div>
@@ -122,7 +106,7 @@ export default function PatientDashboard() {
                   <Bell size={20} className="text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold">⏰ Reminder: {reminderMessage.title}</div>
+                  <div className="font-semibold">{t('patient.reminder', { title: reminderMessage.title })}</div>
                   {reminderMessage.notes && (
                     <div className="text-sm text-white/80">{reminderMessage.notes}</div>
                   )}
@@ -144,7 +128,7 @@ export default function PatientDashboard() {
               {greeting}, {patientData.name || 'Friend'}!
             </h1>
           </div>
-          <p className="text-lg text-gray-500">How are you feeling today?</p>
+          <p className="text-lg text-gray-500">{t('patient.howFeeling')}</p>
         </motion.div>
 
         {/* Quick Stats */}
@@ -155,10 +139,10 @@ export default function PatientDashboard() {
           className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8"
         >
           {[
-            { label: 'Games Played', value: completedCount, icon: Gamepad2, color: 'from-blue-500 to-indigo-500' },
-            { label: 'Memories', value: totalMemories, icon: Heart, color: 'from-rose-500 to-pink-500' },
-            { label: 'Today\'s Reminders', value: schedule.length, icon: Clock, color: 'from-amber-500 to-orange-500' },
-            { label: 'Score', value: '120', icon: Trophy, color: 'from-emerald-500 to-teal-500' },
+            { label: t('patient.gamesPlayed'), value: completedCount, icon: Gamepad2, color: 'from-blue-500 to-indigo-500' },
+            { label: t('patient.memories'), value: totalMemories, icon: Heart, color: 'from-rose-500 to-pink-500' },
+            { label: t('patient.todaysReminders'), value: schedule.length, icon: Clock, color: 'from-amber-500 to-orange-500' },
+            { label: t('patient.score'), value: '120', icon: Trophy, color: 'from-emerald-500 to-teal-500' },
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -187,9 +171,9 @@ export default function PatientDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Calendar size={22} className="text-primary-500" />
-              Today's Schedule
+              {t('patient.todaySchedule')}
             </h2>
-            <span className="text-sm text-gray-400">{schedule.length} items</span>
+            <span className="text-sm text-gray-400">{schedule.length} {t('common.items')}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -233,19 +217,19 @@ export default function PatientDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <Gamepad2 size={22} className="text-teal-500" />
-              Fun Activities
+              {t('patient.funActivities')}
             </h2>
             <button
               onClick={() => navigate('/games')}
               className="text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1 transition-colors"
             >
-              View All
+              {t('patient.viewAll')}
               <ArrowRight size={14} />
             </button>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {gameCards.map((game, index) => (
+            {gameCardConfigs.map((game, index) => (
               <motion.button
                 key={game.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -259,7 +243,7 @@ export default function PatientDashboard() {
                 <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${game.color} flex items-center justify-center mb-3 shadow-md`}>
                   <game.icon size={24} className="text-white" />
                 </div>
-                <h3 className="font-semibold text-gray-900 text-lg">{game.name}</h3>
+                <h3 className="font-semibold text-gray-900 text-lg">{t(game.titleKey)}</h3>
                 <div className="flex items-center gap-1 mt-2">
                   <Star size={14} className="text-amber-400 fill-amber-400" />
                   <Star size={14} className="text-amber-400 fill-amber-400" />
@@ -276,21 +260,18 @@ export default function PatientDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full p-6 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 text-white shadow-xl shadow-red-500/25 flex items-center justify-center gap-4"
-          >
-            <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-              <Phone size={28} />
-            </div>
-            <div className="text-left">
-              <div className="text-xl font-bold">Emergency Call</div>
-              <div className="text-red-100 text-sm">Tap to call your emergency contact</div>
-            </div>
-          </motion.button>
+          <EmergencyButton
+            patientName={patientData.name}
+            emergencyContact={emergencyContact}
+          />
         </motion.div>
       </div>
+
+      {/* Smartwatch Floating Widget */}
+      <SmartwatchFloating />
+
+      {/* Smartwatch Full Panel */}
+      <SmartwatchPanel />
 
       {/* Sakshi AI Assistant */}
       <SakshiAssistant triggerReminder={reminderMessage} />
@@ -298,9 +279,136 @@ export default function PatientDashboard() {
   )
 }
 
-function getGreeting() {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Good Morning'
-  if (hour < 17) return 'Good Afternoon'
-  return 'Good Evening'
+function EmergencyButton({ patientName, emergencyContact }) {
+  const { t } = useLanguage()
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [result, setResult] = useState(null)
+  const [copied, setCopied] = useState(false)
+
+  const handleEmergency = async () => {
+    if (sending || sent) return
+    setSending(true)
+    setResult(null)
+
+    try {
+      const phone = emergencyContact?.phone
+      if (!phone || !isValidPhone(phone)) {
+        setResult({
+          success: false,
+          message: 'No emergency phone number set. Please ask your caregiver to add one in settings.',
+        })
+        setSending(false)
+        return
+      }
+
+      const smsResult = await sendEmergencySMS(
+        phone,
+        patientName || 'Patient',
+        'Patient pressed the emergency button — they need immediate help. Please come right away!'
+      )
+
+      setResult(smsResult)
+      if (smsResult.success) {
+        setSent(true)
+        setTimeout(() => setSent(false), 15000)
+      }
+    } catch (err) {
+      setResult({ success: false, message: 'Could not send SMS. Please try again.' })
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleCopyMessage = () => {
+    if (result?.manualMessage) {
+      navigator.clipboard.writeText(result.manualMessage).then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      })
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={handleEmergency}
+        disabled={sending}
+        className="w-full p-6 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 text-white shadow-xl shadow-red-500/25 flex items-center justify-center gap-4 disabled:opacity-70"
+      >
+        <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+          {sending ? (
+            <div className="w-7 h-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : sent ? (
+            <CheckCircle size={28} />
+          ) : (
+            <MessageSquare size={28} />
+          )}
+        </div>
+        <div className="text-left">
+          <div className="text-xl font-bold">
+            {sending ? 'Sending Emergency SMS...' : sent ? '✅ SMS Sent Successfully!' : '🚨 Emergency SMS'}
+          </div>
+          <div className="text-red-100 text-sm">
+            {sent
+              ? `Alert sent to ${emergencyContact?.name || 'your caregiver'} via SMS`
+              : sending
+                ? 'Sending emergency SMS...'
+                : 'Tap to send emergency SMS to your contact'}
+          </div>
+        </div>
+      </motion.button>
+
+      {/* SMS Result Feedback */}
+      <AnimatePresence>
+        {result && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            className={`rounded-xl p-4 text-sm flex items-start gap-3 ${
+              result.success
+                ? 'bg-green-50 border border-green-200 text-green-800'
+                : 'bg-amber-50 border border-amber-200 text-amber-800'
+            }`}
+          >
+            {result.success ? (
+              <CheckCircle size={18} className="text-green-600 mt-0.5 flex-shrink-0" />
+            ) : (
+              <AlertTriangle size={18} className="text-amber-600 mt-0.5 flex-shrink-0" />
+            )}
+            <div className="flex-1">
+              <div className="font-medium">{result.message}</div>
+              {result.method === 'manual' && (
+                <div className="mt-2">
+                  <p className="text-xs opacity-80 mb-2">Please send this message to {result.phone}:</p>
+                  <div className="bg-white rounded-lg p-2 text-xs font-mono border border-amber-200 mb-2 whitespace-pre-wrap">{result.manualMessage}</div>
+                  <button
+                    onClick={handleCopyMessage}
+                    className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 transition-colors"
+                  >
+                    {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy Message</>}
+                  </button>
+                </div>
+              )}
+              {result.quotaRemaining !== undefined && (
+                <div className="text-xs mt-1 opacity-60">
+                  SMS quota remaining today: {result.quotaRemaining}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function getGreeting(t) {
+  const hour = getISTHour()
+  if (hour < 12) return t('patient.greeting.morning')
+  if (hour < 17) return t('patient.greeting.afternoon')
+  return t('patient.greeting.evening')
 }

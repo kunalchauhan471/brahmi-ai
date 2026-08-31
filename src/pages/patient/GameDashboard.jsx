@@ -5,6 +5,7 @@ import {
   ListOrdered, Eye, Heart, Star, ArrowRight, Trophy
 } from 'lucide-react'
 import { useData } from '../../context/DataContext'
+import { useLanguage } from '../../i18n/LanguageContext'
 import Card from '../../components/ui/Card'
 
 const gameIcons = {
@@ -25,6 +26,7 @@ const difficultyColors = {
 export default function GameDashboard() {
   const navigate = useNavigate()
   const { games, completedGames } = useData()
+  const { t } = useLanguage()
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
@@ -45,8 +47,8 @@ export default function GameDashboard() {
                 <Brain size={20} className="text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Fun Activities</h1>
-                <p className="text-sm text-gray-400">Choose a game to play</p>
+                <h1 className="text-xl font-bold text-gray-900">{t('games.title')}</h1>
+                <p className="text-sm text-gray-400">{t('games.chooseGame')}</p>
               </div>
             </div>
           </div>
@@ -66,9 +68,9 @@ export default function GameDashboard() {
                 <Trophy size={28} className="text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-bold text-gray-900">Your Progress</h2>
+                <h2 className="text-lg font-bold text-gray-900">{t('games.yourProgress')}</h2>
                 <p className="text-sm text-gray-500">
-                  You've completed {Object.keys(completedGames).length} of {games.length} games
+                  {t('games.completedOf', { done: Object.keys(completedGames).length, total: games.length })}
                 </p>
               </div>
               <div className="text-3xl font-bold gradient-text">
@@ -142,7 +144,7 @@ export default function GameDashboard() {
                       }
                     `}
                   >
-                    {isCompleted ? 'Play Again' : 'Start Game'}
+                    {isCompleted ? t('games.playAgain') : t('games.startGame')}
                     <ArrowRight size={16} />
                   </motion.button>
                 </Card>

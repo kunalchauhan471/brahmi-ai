@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Eye, EyeOff, Check, Trophy, RotateCcw, LayoutGrid
 } from 'lucide-react'
+import { useLanguage } from '../../../i18n/LanguageContext'
 
 const allObjects = [
   { id: 1, emoji: '🔑', name: 'Key' },
@@ -22,6 +23,7 @@ const allObjects = [
 
 export default function MemoryTray() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [gameState, setGameState] = useState('setup') // setup, showing, hiding, selecting, result
   const [roundObjects, setRoundObjects] = useState([])
   const [selectedObjects, setSelectedObjects] = useState([])
@@ -102,7 +104,7 @@ export default function MemoryTray() {
               >
                 <ArrowLeft size={20} className="text-gray-600" />
               </motion.button>
-              <h1 className="text-lg font-bold text-gray-900">Memory Tray</h1>
+              <h1 className="text-lg font-bold text-gray-900">{t('games.memoryTray.name')}</h1>
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-400">Round {round}/{totalRounds}</span>
@@ -123,9 +125,9 @@ export default function MemoryTray() {
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/25">
               <LayoutGrid size={36} className="text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Memory Tray</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.memoryTray.name')}</h2>
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              Objects will be shown for a few seconds. Remember them, then select the ones you recall!
+              {t('games.memoryTray.description')}
             </p>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -133,7 +135,7 @@ export default function MemoryTray() {
               onClick={startGame}
               className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-lg shadow-xl shadow-emerald-500/25"
             >
-              Start Game
+              {t('common.startGame')}
             </motion.button>
           </motion.div>
         )}
@@ -147,7 +149,7 @@ export default function MemoryTray() {
           >
             <div className="flex items-center justify-center gap-2 mb-6 text-emerald-600">
               <Eye size={20} />
-              <span className="text-lg font-semibold">Memorize these objects!</span>
+              <span className="text-lg font-semibold">{t('games.memoryTray.memorize')}</span>
             </div>
             <div className="text-3xl font-bold text-primary-500 mb-8">{countdown}</div>
             <div className="grid grid-cols-3 gap-4">
@@ -175,7 +177,7 @@ export default function MemoryTray() {
             className="text-center py-20"
           >
             <EyeOff size={48} className="text-gray-300 mx-auto mb-4" />
-            <p className="text-xl text-gray-500 font-semibold">Hide your eyes!</p>
+            <p className="text-xl text-gray-500 font-semibold">{t('games.memoryTray.hideEyes')}</p>
           </motion.div>
         )}
 
@@ -186,8 +188,8 @@ export default function MemoryTray() {
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Which objects do you remember?</h2>
-              <p className="text-gray-500">Tap all the objects you saw</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.memoryTray.whichObjects')}</h2>
+              <p className="text-gray-500">{t('games.memoryTray.tapObjects')}</p>
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-8">
@@ -225,7 +227,7 @@ export default function MemoryTray() {
               disabled={selectedObjects.length === 0}
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-lg shadow-lg shadow-emerald-500/25 disabled:opacity-50"
             >
-              Submit ({selectedObjects.length} selected)
+              {t('games.memoryTray.submit', { count: selectedObjects.length })}
             </motion.button>
           </motion.div>
         )}
@@ -240,7 +242,7 @@ export default function MemoryTray() {
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mx-auto mb-6 shadow-xl">
               <Check size={36} className="text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Round {round} Complete!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.memoryTray.roundComplete', { round })}</h2>
             <p className="text-gray-500 mb-4">
               You remembered <span className="font-bold text-emerald-600">{correctInRound}</span> out of{' '}
               <span className="font-bold">{roundObjects.length}</span> objects
@@ -261,8 +263,8 @@ export default function MemoryTray() {
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-500/25">
               <Trophy size={40} className="text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Great Memory!</h2>
-            <p className="text-gray-500 mb-6">You completed all rounds</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('games.memoryTray.greatMemory')}</h2>
+            <p className="text-gray-500 mb-6">{t('games.memoryTray.completedAll')}</p>
             <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary-50 to-teal-50 border border-primary-100 mb-8">
               <span className="text-3xl font-bold gradient-text">{score}</span>
               <span className="text-gray-500">total points</span>

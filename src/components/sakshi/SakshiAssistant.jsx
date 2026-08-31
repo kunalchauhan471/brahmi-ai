@@ -6,47 +6,79 @@ import {
   Brain, AlertTriangle, Gamepad2, Heart
 } from 'lucide-react'
 import { useData } from '../../context/DataContext'
+import { useSmartwatch } from '../../context/SmartwatchContext'
+import { useLanguage } from '../../i18n/LanguageContext'
+import { getISTHour, getISTTotalMinutes, parseTimeToMinutes } from '../../utils/timezone'
+import BrahmiLogo from '../ui/BrahmiLogo'
 
-function speak(text, onEnd) {
+const LANG_VOICE_MAP = {
+  en: 'en', hi: 'hi', as: 'as', bn: 'bn', ne: 'ne', mni: 'hi',
+  mz: 'en', kha: 'en', gar: 'en', brx: 'hi', kok: 'bn',
+}
+
+function speak(rawText, onEnd, lang = 'en', voiceType = 'female', speed = 'normal') {
   if (!('speechSynthesis' in window)) {
     onEnd?.()
     return
   }
   window.speechSynthesis.cancel()
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.rate = 0.9
-  utterance.pitch = 1.1
-  utterance.volume = 1
+  // Strip emojis, markdown bold, bullet points, and clean up for speech
+  const text = rawText
+    .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '')
+    .replace(/\*\*/g, '')
+    .replace(/^[•\-\d.]+\s*/gm, '')
+    .replace(/\n{2,}/g, '. ')
+    .replace(/\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!text) { onEnd?.(); return }
 
+  const langRegionMap = { en: 'en-US', hi: 'hi-IN', as: 'as-IN', bn: 'bn-IN', ne: 'ne-NP', mni: 'hi-IN', mz: 'en-US', kha: 'en-US', gar: 'en-US', brx: 'hi-IN', kok: 'bn-IN' }
+  const targetLang = langRegionMap[lang] || 'en-US'
+  const baseLang = targetLang.substring(0, 2)
   const voices = window.speechSynthesis.getVoices()
-  const femaleVoice = voices.find(
-    v => v.name.toLowerCase().includes('female') ||
-         v.name.toLowerCase().includes('samantha') ||
-         v.name.toLowerCase().includes('karen') ||
-         v.name.toLowerCase().includes('victoria') ||
-         v.name.toLowerCase().includes('zira') ||
-         v.name.toLowerCase().includes('hazel') ||
-         v.name.toLowerCase().includes('google uk english female') ||
-         v.name.toLowerCase().includes('microsoft zira') ||
-         v.name.toLowerCase().includes('microsoft hazel') ||
-         v.name.toLowerCase().includes('fiona') ||
-         v.lang.startsWith('en') && v.name.toLowerCase().includes('female')
+  const isFemale = voiceType === 'female'
+
+  // Female voice keywords
+  const femaleKeywords = ['female', 'woman', 'samantha', 'karen', 'zira', 'hazel', 'fiona', 'google']
+  // Male voice keywords
+  const maleKeywords = ['male', 'man', 'david', 'james', 'daniel', 'google uk english male', 'microsoft david']
+  const voiceKeywords = isFemale ? femaleKeywords : maleKeywords
+
+  // 1. Try to find a voice for the target language matching gender
+  let selectedVoice = voices.find(
+    v => v.lang.startsWith(baseLang) && voiceKeywords.some(kw => v.name.toLowerCase().includes(kw))
   )
-  if (femaleVoice) utterance.voice = femaleVoice
-  else {
-    const anyFemale = voices.find(v => v.name.toLowerCase().includes('female'))
-    if (anyFemale) utterance.voice = anyFemale
+  // 2. Try any voice for the target language
+  if (!selectedVoice) {
+    selectedVoice = voices.find(v => v.lang.startsWith(baseLang))
+  }
+  // 3. Try any voice matching gender
+  if (!selectedVoice) {
+    selectedVoice = voices.find(v => voiceKeywords.some(kw => v.name.toLowerCase().includes(kw)))
+  }
+  // 4. Fall back to any voice
+  if (!selectedVoice) {
+    selectedVoice = voices.find(v => v.lang.startsWith('en'))
   }
 
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.rate = speed === 'slow' ? 0.6 : 0.9
+  utterance.pitch = voiceType === 'female' ? 1.1 : 0.85
+  utterance.volume = 1
+  utterance.lang = targetLang
+  if (selectedVoice) {
+    utterance.voice = selectedVoice
+  }
   utterance.onend = () => onEnd?.()
   window.speechSynthesis.speak(utterance)
 }
 
-function getGreetingText(name) {
-  const hour = new Date().getHours()
-  if (hour < 12) return `Good morning`
-  if (hour < 17) return `Good afternoon`
-  return `Good evening`
+function getGreetingText(t) {
+  const hour = getISTHour()
+  if (hour < 12) return t('patient.greeting.morning')
+  if (hour < 17) return t('patient.greeting.afternoon')
+  return t('patient.greeting.evening')
 }
 
 const EMERGENCY_KEYWORDS = [
@@ -60,16 +92,22 @@ function detectEmergency(text) {
   return EMERGENCY_KEYWORDS.some(keyword => lower.includes(keyword))
 }
 
-const MOOD_RESPONSES = {
-  good: ["That's wonderful to hear! It makes me so happy when you're feeling well.", "Great! A good mood makes everything better. Let's have a wonderful day!"],
-  fine: ["I'm glad you're doing okay. If there's anything I can do to make your day better, just let me know!", "That's good to hear. I'm here whenever you need me."],
-  bad: ["I'm sorry to hear that. Please take it easy today. Would you like me to call someone for you?", "I understand. Remember, it's okay to feel this way. I'm right here with you."],
-  default: ["Thank you for sharing that with me. I'm always here for you!", "I appreciate you telling me how you feel. Let's take it one step at a time today."]
+function getMoodResponses(t) {
+  return {
+    good: t('sakshi.mood.good'),
+    fine: t('sakshi.mood.fine'),
+    bad: t('sakshi.mood.bad'),
+    default: t('sakshi.mood.default'),
+  }
 }
 
 export default function SakshiAssistant({ triggerReminder }) {
   const navigate = useNavigate()
   const { patientData, schedule, memories } = useData()
+  const { healthData, connected: watchConnected, emergencyActive, setEmergencyActive, getHeartRateStatus } = useSmartwatch()
+  const emergencyContact = useData.getState?.()?.emergencyContact
+  const patientName = patientData.name || 'Patient'
+  const { t, language } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
@@ -82,6 +120,28 @@ export default function SakshiAssistant({ triggerReminder }) {
   const messagesEndRef = useRef(null)
   const chatContainerRef = useRef(null)
   const recognitionRef = useRef(null)
+  const langRef = useRef(language)
+  const watchConnectedRef = useRef(watchConnected)
+  const healthDataRef = useRef(healthData)
+
+  // Keep refs in sync
+  useEffect(() => {
+    langRef.current = language
+  }, [language])
+  useEffect(() => {
+    watchConnectedRef.current = watchConnected
+  }, [watchConnected])
+  useEffect(() => {
+    healthDataRef.current = healthData
+  }, [healthData])
+
+  // Reset greeting when language changes so Sakshi re-greets in new language
+  useEffect(() => {
+    if (isOpen) {
+      setGreeted(false)
+      setMessages([])
+    }
+  }, [language])
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -107,10 +167,10 @@ export default function SakshiAssistant({ triggerReminder }) {
       setIsOpen(true)
       const name = patientData.name || 'there'
       const messages = [
-        `Hey ${name}, it's time for your ${triggerReminder.title}! 😊`,
-        `${name}, gentle reminder — it's ${triggerReminder.title} time. ${triggerReminder.notes || ''} 💊`,
-        `Hi ${name}! Just reminding you that it's time for ${triggerReminder.title}. ${triggerReminder.notes || 'Hope you\'re doing well!'}`,
-        `${name}, this is your ${triggerReminder.title} reminder. ${triggerReminder.notes || 'Take care of yourself!'}`,
+        t('sakshi.reminderMessages.0', { name, title: triggerReminder.title }),
+        t('sakshi.reminderMessages.1', { name, title: triggerReminder.title, notes: triggerReminder.notes || '' }),
+        t('sakshi.reminderMessages.2', { name, title: triggerReminder.title, notes: triggerReminder.notes || '' }),
+        t('sakshi.reminderMessages.3', { name, title: triggerReminder.title, notes: triggerReminder.notes || '' }),
       ]
       const text = messages[Math.floor(Math.random() * messages.length)]
       addBotMessage(text, 300)
@@ -122,7 +182,7 @@ export default function SakshiAssistant({ triggerReminder }) {
     if (isOpen && !greeted) {
       setGreeted(true)
       const name = patientData.name || 'friend'
-      const greeting = getGreetingText(name)
+      const greeting = getGreetingText(t)
 
       const introMessages = [
         {
@@ -133,7 +193,7 @@ export default function SakshiAssistant({ triggerReminder }) {
         },
         {
           id: Date.now() + 1,
-          text: `I'm Sakshi, your personal assistant. How are you feeling today?`,
+          text: t('sakshi.greeting'),
           sender: 'sakshi',
           timestamp: new Date(),
         },
@@ -142,10 +202,61 @@ export default function SakshiAssistant({ triggerReminder }) {
       setMessages(introMessages)
 
       if (voiceEnabled) {
-        speak(`${greeting}, ${name}! I'm Sakshi, your personal assistant. How are you feeling today?`)
+        speak(`${greeting}, ${name}! ${t('sakshi.greeting')}`, null, langRef.current, patientData.voice || 'female', patientData.speechSpeed || 'normal')
       }
     }
-  }, [isOpen, greeted, patientData.name, voiceEnabled])
+  }, [isOpen, greeted, patientData.name, voiceEnabled, language])
+
+  // ── SMARTWATCH HEALTH MONITORING ──
+  // Sakshi proactively speaks when she detects health changes
+  const lastHealthMessageRef = useRef(0)
+  useEffect(() => {
+    if (!watchConnectedRef.current || !voiceEnabled) return
+
+    const interval = setInterval(() => {
+      const now = Date.now()
+      // Don't spam messages — minimum 30 seconds between health messages
+      if (now - lastHealthMessageRef.current < 30000) return
+
+      const hr = healthData.heartRate
+      const status = getHeartRateStatus(hr)
+      const name = patientData.name || 'there'
+
+      if (status.urgent && hr > 110) {
+        lastHealthMessageRef.current = now
+        addBotMessage(`I noticed your heart rate is a bit high at ${hr} BPM. Please sit down and relax for a few minutes. 🧘‍♂️`, 300)
+      } else if (status.urgent && hr < 55) {
+        lastHealthMessageRef.current = now
+        addBotMessage(`Your heart rate seems low at ${hr} BPM. If you feel dizzy or unwell, please let me know immediately. 🆘`, 300)
+      } else if (healthData.battery < 15) {
+        lastHealthMessageRef.current = now
+        addBotMessage(`Your watch battery is running low at ${healthData.battery}%. Please charge it soon so we can keep monitoring. ⌚`, 300)
+      }
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [watchConnected, healthData.heartRate, healthData.battery, voiceEnabled, patientData.name, language])
+
+  // Handle emergency from smartwatch — send SMS to caregiver
+  useEffect(() => {
+    if (emergencyActive) {
+      if (isOpen) {
+        addBotMessage("🚨 I'm detecting an emergency! Your heart rate is critically abnormal. I'm sending an SMS to your emergency contact right now. Please stay calm.", 200)
+      }
+      // Send emergency notification to caregiver via SMS
+      import('../../utils/emergencyService.js').then(({ sendEmergencySMS, isValidPhone }) => {
+        const phone = emergencyContact?.phone
+        if (phone && isValidPhone(phone)) {
+          sendEmergencySMS(phone, patientName, `Smartwatch emergency detected — critically abnormal heart rate`)
+            .then(r => {
+              if (r.success && isOpen) {
+                setTimeout(() => addBotMessage(`✅ Emergency SMS sent to ${emergencyContact.name || 'your caregiver'}. Help is on the way!`, 500), 3000)
+              }
+            })
+        }
+      }).catch(() => {})
+    }
+  }, [emergencyActive])
 
   // Speech Recognition setup
   const getRecognition = () => {
@@ -155,7 +266,8 @@ export default function SakshiAssistant({ triggerReminder }) {
     const recognition = new SpeechRecognition()
     recognition.continuous = false
     recognition.interimResults = true
-    recognition.lang = 'en-US'
+    const langMap = { en: 'en-US', hi: 'hi-IN', as: 'as-IN', bn: 'bn-IN', mni: 'mni-IN', ne: 'ne-NP' }
+    recognition.lang = langMap[language] || 'en-US'
 
     recognition.onresult = (event) => {
       let interim = ''
@@ -218,7 +330,7 @@ export default function SakshiAssistant({ triggerReminder }) {
         sender: 'sakshi',
         timestamp: new Date(),
       }])
-      if (voiceEnabled) speak(text)
+      if (voiceEnabled) speak(text, null, langRef.current, patientData.voice || 'female', patientData.speechSpeed || 'normal')
     }, delay)
   }
 
@@ -233,23 +345,47 @@ export default function SakshiAssistant({ triggerReminder }) {
     }])
     setInputText('')
 
-    // Check for emergency
+    const lower = text.toLowerCase().trim()
+    const name = patientData.name || 'there'
+
+    // ── 1. EMERGENCY ──
     if (detectEmergency(text)) {
       setEmergencyMode(true)
-      addBotMessage(
-        `I understand you need help. I'm connecting you to your emergency contact right now. Stay calm, help is on the way. 🆘`,
-        500
-      )
+      addBotMessage(t('sakshi.emergencyHelp'), 500)
       setTimeout(() => {
-        addBotMessage(`📞 Calling ${patientData.name ? 'your emergency contact' : 'emergency contact'}... If this is a real emergency, please also dial 112 or your local emergency number.`, 1500)
+        addBotMessage(t('sakshi.emergencyCalling'), 1500)
       }, 100)
+      // Send emergency notification to caregiver via SMS
+      import('../../utils/emergencyService.js').then(({ sendEmergencySMS, isValidPhone }) => {
+        const phone = emergencyContact?.phone
+        if (phone && isValidPhone(phone)) {
+          sendEmergencySMS(phone, patientName, 'Patient triggered emergency via Sakshi AI assistant')
+            .then(r => {
+              if (r.success) {
+                setTimeout(() => {
+                  addBotMessage(`✅ Emergency SMS sent to ${emergencyContact.name || 'your caregiver'}. Help is on the way!`, 500)
+                }, 2000)
+              } else {
+                setTimeout(() => {
+                  addBotMessage(`⚠️ Could not send SMS. Please call your caregiver directly.`, 500)
+                }, 2000)
+              }
+            })
+        } else {
+          setTimeout(() => {
+            addBotMessage(`⚠️ No emergency phone number set. Please ask your caregiver to add one.`, 500)
+          }, 2000)
+        }
+      }).catch(() => {
+        console.warn('[Sakshi] Could not load emergency service')
+      })
       return
     }
 
-    // Mood detection
-    const lower = text.toLowerCase()
-    if (lower.includes('good') || lower.includes('great') || lower.includes('happy') || lower.includes('wonderful') || lower.includes('excellent')) {
-      const responses = MOOD_RESPONSES.good
+    // ── 2. MOOD DETECTION ──
+    const MOOD = getMoodResponses(t)
+    if (lower.match(/\b(good|great|happy|wonderful|excellent|amazing|fantastic|awesome|nice|achha|badhiya|khush)\b/)) {
+      const responses = MOOD.good
       addBotMessage(responses[Math.floor(Math.random() * responses.length)])
       setTimeout(() => {
         const scheduleText = getScheduleSummary()
@@ -257,8 +393,8 @@ export default function SakshiAssistant({ triggerReminder }) {
       }, 200)
       return
     }
-    if (lower.includes('fine') || lower.includes('okay') || lower.includes('ok') || lower.includes('alright')) {
-      const responses = MOOD_RESPONSES.fine
+    if (lower.match(/\b(fine|okay|ok|alright|not bad|doing well|theek hai|sahi hai)\b/) && !lower.includes('schedule') && !lower.includes('time')) {
+      const responses = MOOD.fine
       addBotMessage(responses[Math.floor(Math.random() * responses.length)])
       setTimeout(() => {
         const scheduleText = getScheduleSummary()
@@ -266,88 +402,242 @@ export default function SakshiAssistant({ triggerReminder }) {
       }, 200)
       return
     }
-    if (lower.includes('bad') || lower.includes('sad') || lower.includes('tired') || lower.includes('not good') || lower.includes('sick') || lower.includes('pain')) {
-      const responses = MOOD_RESPONSES.bad
+    if (lower.match(/\b(bad|sad|tired|not good|sick|pain|hurts|unwell|weak|dizzy|headache|fever|cold|cough|bura|dukh|thak|dard|bimar)\b/)) {
+      const responses = MOOD.bad
       addBotMessage(responses[Math.floor(Math.random() * responses.length)])
       return
     }
 
-    // Schedule queries
-    if (lower.includes('schedule') || lower.includes('today') || lower.includes('plan') || lower.includes('remind') || lower.includes('what to do')) {
-      const scheduleText = getScheduleSummary()
-      addBotMessage(`Here's your full schedule for today: ${scheduleText} I'll remind you when it's time for each activity! ⏰`)
+    // ── 3. TIME & DATE ──
+    if (lower.match(/\b(what time|current time|time now|kitne baje|time is it|samay)\b/)) {
+      const now = new Date()
+      const timeStr = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true })
+      addBotMessage(`It's ${timeStr} right now. ⏰\n\nHere's what's coming up next in your schedule: ${getScheduleSummary()}`)
+      return
+    }
+    if (lower.match(/\b(what day|which day|date today|today date|aaj ki date|tarikh)\b/)) {
+      const now = new Date()
+      const dateStr = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      addBotMessage(`Today is ${dateStr}. 📅\n\n${getScheduleSummary()}`)
+      return
+    }
+    if (lower.match(/\b(good morning|good afternoon|good evening)\b/)) {
+      addBotMessage(`${getGreetingText(t)}, ${name}! 🌸\n\n${getScheduleSummary()}`)
       return
     }
 
-    // Family/memory queries (checked BEFORE games so compound messages work)
-    if (lower.includes('family') || lower.includes('photo') || lower.includes('memory') || lower.includes('who is') || lower.includes('talk') || lower.includes('relative') || lower.includes('son') || lower.includes('daughter') || lower.includes('wife') || lower.includes('husband')) {
+    // ── 4. SPECIFIC SCHEDULE QUERIES ──
+    // Next task / upcoming
+    if (lower.match(/\b(next|upcoming|coming up|what's next|aage kya|next task|next activity|next reminder|agla|agle|pugun|pokkhol)\b/)) {
+      const currentMinutes = getISTTotalMinutes()
+      const nextItems = schedule
+        .map(s => ({ ...s, mins: parseTimeToMinutes(s.time) }))
+        .filter(s => s.mins !== null && s.mins > currentMinutes)
+        .sort((a, b) => a.mins - b.mins)
+      if (nextItems.length > 0) {
+        const next = nextItems[0]
+        const minsAway = next.mins - currentMinutes
+        const hours = Math.floor(minsAway / 60)
+        const mins = minsAway % 60
+        let timeAway = ''
+        if (hours > 0) timeAway += `${hours} hour${hours > 1 ? 's' : ''} `
+        timeAway += `${mins} minute${mins !== 1 ? 's' : ''}`
+        addBotMessage(`Your next task is **${next.title}** at ${next.time}. ⏰\nThat's about ${timeAway} from now.\n${next.notes ? `📝 ${next.notes}` : ''}`)
+      } else {
+        addBotMessage(`You've completed all your activities for today! Great job! 🎉`)
+      }
+      return
+    }
+
+    // Specific activity: medicine, lunch, breakfast, etc.
+    const activityKeywords = ['medicine', 'medication', 'pill', 'dawa', 'goli', 'breakfast', 'nashta', 'lunch', 'dinner', 'meal', 'khana', 'walk', 'exercise', 'tea', 'chai', 'water', 'paani', 'sleep', 'sona', 'bedtime', 'nap']
+    const matchedActivity = activityKeywords.find(kw => lower.includes(kw))
+    if (matchedActivity && (lower.match(/\b(when|what time|kitne baje|time|schedule|remind|next|upcoming)\b/) || lower.includes(matchedActivity))) {
+      const matched = schedule.filter(s => s.title.toLowerCase().includes(matchedActivity) || s.notes?.toLowerCase().includes(matchedActivity))
+      if (matched.length > 0) {
+        const items = matched.map(s => `• ${s.title} at ${s.time}${s.notes ? ` — ${s.notes}` : ''}`).join('\n')
+        addBotMessage(`Here are your ${matchedActivity} reminders:\n\n${items} ⏰\n\nI'll remind you when it's time!`)
+      } else {
+        addBotMessage(`I don't see a specific ${matchedActivity} reminder in your schedule. Would you like me to check your full schedule? 📋`)
+      }
+      return
+    }
+
+    // General schedule query
+    if (lower.match(/\b(schedule|today|plan|remind|what to do|aaj|routine|din|kaam|anusooca|shedyool)\b/)) {
+      const scheduleText = getScheduleSummary()
+      addBotMessage(`Here's your full schedule for today:\n\n${scheduleText}\n\nI'll remind you when it's time for each activity! ⏰`)
+      return
+    }
+
+    // ── 4b. HEALTH & SMARTWATCH QUERIES ──
+    if (lower.match(/\b(heart|heart rate|pulse|bpm|dil|dil ki dhadkan|heartbeats?|cardiac)\b/)) {
+      if (watchConnectedRef.current) {
+        const hr = healthDataRef.current.heartRate
+        const status = getHeartRateStatus(hr)
+        const wd = healthDataRef.current
+        const friendlyMessage = hr >= 60 && hr <= 100
+          ? `Your heart is doing well today! ❤️\n\nCurrent heart rate: **${hr} BPM**\nStatus: ${status.label}\n\nKeep staying active and hydrated!`
+          : `I'm monitoring your heart rate. It's currently **${hr} BPM**, which is ${status.label.toLowerCase()}. ${hr > 100 ? 'Please rest for a moment.' : 'Please sit down if you feel any discomfort.'}`
+        addBotMessage(friendlyMessage)
+      } else {
+        addBotMessage(`I can't check your heart rate right now because the smartwatch isn't connected. Would you like me to help you connect it? 📱`, 500)
+      }
+      return
+    }
+    if (lower.match(/\b(steps|walk|distance|kadam|how much did i walk|activity|exercise|calories?|cal)\b/)) {
+      if (watchConnectedRef.current) {
+        const wd = healthDataRef.current
+        addBotMessage(`Here's your activity today:\n\n👣 Steps: **${wd.steps.toLocaleString()}**\n🔥 Calories: **${wd.calories} kcal**\n🚶 Activity: **${wd.activityMinutes} minutes**\n\n${wd.steps > 4000 ? "Great job staying active! 🎉" : "Try to take a short walk — it's good for you! 🚶"}`)
+      } else {
+        addBotMessage(`I can't track your steps right now because the smartwatch isn't connected. Connect it from the watch icon at the top! 📱`)
+      }
+      return
+    }
+    if (lower.match(/\b(sleep|slept|neend|rest|how did i sleep|sleep quality)\b/)) {
+      if (watchConnectedRef.current) {
+        const sleepH = healthDataRef.current.sleepHours
+        addBotMessage(`You slept **${sleepH} hours** last night. 😴\n\n${sleepH >= 7 ? "That's a good amount of sleep! You should feel well-rested." : sleepH >= 5 ? "That's a bit less than recommended. Try to get 7-8 hours tonight." : "That's quite less. Make sure to rest early tonight."}`)
+      } else {
+        addBotMessage(`I can't check your sleep data right now. Connect your smartwatch to start tracking sleep! 😴`)
+      }
+      return
+    }
+    if (lower.match(/\b(watch|battery|smartwatch|wearable|band|gadget)\b/)) {
+      if (watchConnectedRef.current) {
+        const wd = healthDataRef.current
+        addBotMessage(`Your ${wd.watchName} is connected! ⌚\n\n🔋 Battery: ${wd.battery}%\n📶 Signal: ${wd.signalStrength}%\n❤️ Heart Rate: ${wd.heartRate} BPM\n\nEverything looks good!`)
+      } else {
+        addBotMessage(`Your smartwatch isn't connected yet. Tap the watch icon at the top of the page to connect it and start health monitoring! ⌚`) 
+      }
+      return
+    }
+
+    // ── 5. FAMILY & MEMORY QUERIES ──
+    // Check for specific person name
+    const specificPerson = memories.find(m => lower.includes(m.name.toLowerCase()))
+    if (specificPerson) {
+      addBotMessage(`${specificPerson.emoji} **${specificPerson.name}** — ${specificPerson.relationship}\n\n${specificPerson.description}\n\nWould you like to know about anyone else? 📸`)
+      return
+    }
+
+    // General family query
+    if (lower.match(/\b(family|photo|memory|who is|talk|relative|son|daughter|wife|husband|log|parivar|rishte|yaad|paribar|poribar)\b/)) {
       if (memories.length > 0) {
-        const familyList = memories.map(m => `${m.emoji} ${m.name} (${m.relationship})`).join(', ')
-        addBotMessage(`Here are the people in your memory vault: ${familyList}\n\nWould you like to know more about someone specific? Just tell me their name! 📸`)
+        const familyList = memories.map(m => `${m.emoji} ${m.name} (${m.relationship})`).join('\n')
+        addBotMessage(`Here are the people in your memory vault:\n\n${familyList}\n\nTell me a name and I'll share more details about them! 📸`)
       } else {
         addBotMessage(`No memories have been uploaded yet. Ask your caregiver to add family photos so we can connect with your loved ones! 📸`)
       }
       return
     }
 
-    // Games queries (only if no negative sentiment about games)
-    const wantsGames = lower.includes('game') || lower.includes('play') || lower.includes('bored') || lower.includes('fun')
-    const rejectsGames = lower.includes('no') || lower.includes('don') || lower.includes('not want') || lower.includes('skip') || lower.includes('instead')
+    // ── 6. PATIENT INFO QUERIES ──
+    if (lower.match(/\b(what's my name|my name|who am i|mera naam|naam kya|mung no|amar naam)\b/)) {
+      addBotMessage(`Your name is **${patientData.name || 'not set yet'}**! 😊\n\n${patientData.age ? `You are ${patientData.age} years old.` : ''} ${patientData.gender || ''}`)
+      return
+    }
+    if (lower.match(/\b(how old|my age|age|umar|kitne saal|kati barsha|bochor)\b/)) {
+      addBotMessage(patientData.age ? `You are **${patientData.age} years old**! 😊\n\nAge is just a number — you're doing great!` : "I don't have your age on file yet. Your caregiver can add that information.")
+      return
+    }
+    if (lower.match(/\b(what language|my language|language|hindi|english|bhasha)\b/)) {
+      addBotMessage(patientData.language ? `Your preferred language is **${patientData.language}**. 🗣️` : "I don't have your language preference on file yet.")
+      return
+    }
+
+    // ── 7. EMERGENCY CONTACT ──
+    if (lower.match(/\b(emergency contact|emergency number|who to call|help number|sos number|ambulance)\b/)) {
+      const ec = useData.getState?.()?.emergencyContact
+      if (ec && ec.name) {
+        addBotMessage(`Your emergency contact is:\n\n📞 **${ec.name}** (${ec.relationship || 'Emergency Contact'})\n📱 ${ec.phone || 'No number on file'}\n\nIn a real emergency, you can also dial **112** 🆘`)
+      } else {
+        addBotMessage(`I don't have an emergency contact on file. In a real emergency, please dial **112** 🆘\n\nAsk your caregiver to set up your emergency contact.`)
+      }
+      return
+    }
+
+    // ── 8. GAMES QUERIES ──
+    const wantsGames = lower.match(/\b(game|play|bored|fun|khel|activity|activities|khelna|nakhla)\b/)
+    const rejectsGames = lower.match(/\b(no|don|not want|skip|instead|nahi|mat|nah|mane nai|na|nai)\b/)
     if (wantsGames && !rejectsGames) {
-      addBotMessage(`Yes! You can play games right below on this page! 🎮\n\nScroll down to see the Fun Activities section — tap any game card to start playing.\n\nYou can also say \'View All\' to see all 6 games!`, 500)
+      addBotMessage(`Yes! You can play games right below on this page! 🎮\n\nHere are the games you can play:\n• 🧠 Memory Album — Identify family photos\n• 🎯 Memory Tray — Remember objects\n• 👥 Face Match — Match family faces\n• 📋 Routine Sequencer — Order your day\n• 👁️ Spot the Difference — Find what changed\n• 💕 Pair Matcher — Match pairs\n\nScroll down and tap any game card to start!`, 500)
       return
     }
 
-    // Affirmative responses after being asked about games
-    const isYes = lower.includes('yes') || lower.includes('sure') || lower.includes('yeah') || lower.includes('ok') || lower.includes('let') || lower.includes('take me')
-    if (isYes) {
-      addBotMessage(`Great! Scroll down on this page and you'll see the Fun Activities cards — tap any game to start! 🎮\n\nOr I can take you to the full games page.`, 500)
+    // Affirmative responses
+    if (lower.match(/\b(yes|sure|yeah|ok|let|take me|haan|theek hai|hoi)\b/) && !lower.includes('schedule')) {
+      addBotMessage(`Great! Scroll down on this page and you'll see the Fun Activities cards — tap any game to start! 🎮`, 500)
       return
     }
 
-    // Help/about sakshi
-    if (lower.includes('who are you') || lower.includes('about you') || lower.includes('what can you do')) {
-      addBotMessage(`I'm Sakshi, your personal care assistant! 💜\n\nI can:\n• Tell you about your daily schedule\n• Remind you to take medicine and meals\n• Help you play memory games\n• Connect you with family\n• Call for help when you need it\n\nJust talk to me anytime!`)
+    // ── 9. ABOUT SAKSHI ──
+    if (lower.match(/\b(who are you|about you|what can you do|your name|tumhara naam|kya kar sakti)\b/)) {
+      addBotMessage(`${t('sakshi.about')}\n\n${t('sakshi.helpWith')}\n\n${t('sakshi.helpSchedule')}\n${t('sakshi.helpReminders')}\n${t('sakshi.helpFamily')}\n${t('sakshi.helpGames')}\n${t('sakshi.helpEmergency')}\n${t('sakshi.helpTime')}\n${watchConnectedRef.current ? '❤️ Monitor your heart rate and health\n🚶 Track your steps and activity\n😴 Check your sleep quality\n' : ''}\n${t('sakshi.justTalk')}`)
       return
     }
 
-    // Thank you
-    if (lower.includes('thank') || lower.includes('thanks')) {
-      addBotMessage(`You're welcome! I'm always here for you. 💜 Is there anything else you'd like to know?`)
+    // ── 10. THANK YOU ──
+    if (lower.match(/\b(thank|thanks|dhanyavaad|shukriya|thanks a lot|dhonyabad)\b/)) {
+      addBotMessage(`You're welcome, ${name}! 💜 I'm always here for you. Is there anything else you'd like to know?`)
       return
     }
 
-    // Default
-    addBotMessage(`I heard you! I'm here to help with your daily schedule, remind you about medicines, play fun games, or connect you with your family. What would you like to do? 😊`)
+    // ── 11. JOKES / FUN ──
+    if (lower.match(/\b(joke|funny|make me laugh|hasa|maza|mazak|entertain)\b/)) {
+      const jokes = [
+        "Why don't scientists trust atoms? Because they make up everything! 😄",
+        "What do you call a fake noodle? An impasta! 🍝😄",
+        "Why did the scarecrow win an award? He was outstanding in his field! 🌾😂",
+        "What do you call a bear with no teeth? A gummy bear! 🐻😄",
+        "Why don't eggs tell jokes? They'd crack each other up! 🥚😂"
+      ]
+      addBotMessage(jokes[Math.floor(Math.random() * jokes.length)])
+      return
+    }
+
+    // ── 12. GENERAL KNOWLEDGE ──
+    if (lower.match(/\b(what is|tell me about|explain|kya hai|kya hota|meaning of|define)\b/)) {
+      if (lower.includes('brahmi')) {
+        addBotMessage(`**Brahmi AI** is your personal cognitive care assistant! 🧠\n\nNamed after the Brahmi herb (Bacopa monnieri), which is known in Ayurveda for boosting memory and brain health.\n\nI'm here to help you stay connected with your memories, manage your daily routine, and keep your mind active! 💜`)
+      } else if (lower.includes('dementia')) {
+        addBotMessage(`**Dementia** is a condition that affects memory, thinking, and social abilities. It can make daily tasks challenging.\n\nThat's why Brahmi AI exists — to help you stay connected with your memories through personalized activities, family photos, and daily routines. 💜\n\nYou're doing great by using this app!`)
+      } else if (lower.includes('memory') || lower.includes('brain')) {
+        addBotMessage(`Your **memory** is like a garden — the more you tend to it, the better it grows! 🌱\n\nPlaying memory games, looking at family photos, and following daily routines all help keep your mind sharp.\n\nWould you like to play a memory game right now? 🧠`)
+      } else {
+        addBotMessage(`I'm not sure I understand that fully, but I'm here to help! 😊\n\nYou can ask me about:\n• 📋 Your schedule or next task\n• ⏰ What time something is\n• 👨‍👩‍👧 Your family members\n• 🎮 Games to play\n• 🆘 Getting help\n• 😄 A joke to brighten your day\n\nWhat would you like to know?`)
+      }
+      return
+    }
+
+    // ── 13. GREETINGS ──
+    if (lower.match(/\b(hello|hi|hey|namaste|namaskar|sup|yo|pranam)\b/) && lower.length < 15) {
+      addBotMessage(`${getGreetingText(t)}, ${name}! 🌸\n\nHow can I help you today?\n\nYou can ask me about your schedule, family, games, or anything else!`)
+      return
+    }
+
+    // ── 14. DEFAULT (smart fallback) ──
+    // Try to find any useful context from the message
+    const scheduleHint = schedule.find(s => lower.includes(s.title.toLowerCase().split(' ')[0]))
+    if (scheduleHint) {
+      addBotMessage(`I see you're asking about **${scheduleHint.title}**! 📋\n\nIt's scheduled for ${scheduleHint.time}.${scheduleHint.notes ? `\n📝 ${scheduleHint.notes}` : ''}\n\nI'll remind you when it's time!`)
+      return
+    }
+
+    addBotMessage(`I'm not sure I understand that fully, but I'm here to help! 😊\n\nYou can ask me about:\n• 📋 Your schedule or next task\n• ⏰ What time something is\n• 👨‍👩‍👧 Your family members\n• 🎮 Games to play\n• 🆘 Getting help\n• 😄 A joke to brighten your day\n\nWhat would you like to know?`)
   }
 
   const getScheduleSummary = () => {
-    if (schedule.length === 0) return "No reminders set for today."
+    if (schedule.length === 0) return 'No reminders set for today.'
 
-    const now = new Date()
-    const currentMinutes = now.getHours() * 60 + now.getMinutes()
-
-    const parseTime = (timeStr) => {
-      const cleaned = timeStr.trim()
-      const isPM = /PM/i.test(cleaned)
-      const isAM = /AM/i.test(cleaned)
-      const withoutMeridiem = cleaned.replace(/\s*(AM|PM)/i, '').trim()
-      const parts = withoutMeridiem.split(':')
-      if (parts.length !== 2) return null
-      let hours = parseInt(parts[0], 10)
-      const minutes = parseInt(parts[1], 10)
-      if (isNaN(hours) || isNaN(minutes)) return null
-      if (isPM && hours !== 12) hours += 12
-      if (isAM && hours === 12) hours = 0
-      return hours * 60 + minutes
-    }
+    const currentMinutes = getISTTotalMinutes()
 
     // Get upcoming items (within next 3 hours) and recent items (within last 1 hour)
     const upcoming = []
     const recent = []
 
     schedule.forEach(s => {
-      const mins = parseTime(s.time)
+      const mins = parseTimeToMinutes(s.time)
       if (mins === null) return
       const diff = mins - currentMinutes
       if (diff > 0 && diff <= 180) upcoming.push(s)
@@ -355,23 +645,23 @@ export default function SakshiAssistant({ triggerReminder }) {
     })
 
     if (upcoming.length > 0) {
-      const items = upcoming.slice(0, 3).map(s => `${s.title} at ${s.time}`)
-      return `Coming up soon: ${items.join(', ')}.` 
+      const items = upcoming.slice(0, 3).map(s => `${s.title} ${s.time}`)
+      return `Coming up soon: ${items.join(', ')}.`
     }
 
     if (recent.length > 0) {
       const items = recent.map(s => s.title)
-      return `You just had ${items.join(' and ')}. Hope it went well!`
+      return `You just had ${items.join(' & ')}. Hope it went well!`
     }
 
     // Fallback: show the next few items from now
     const sortedFuture = schedule
-      .map(s => ({ ...s, mins: parseTime(s.time) }))
+      .map(s => ({ ...s, mins: parseTimeToMinutes(s.time) }))
       .filter(s => s.mins !== null && s.mins > currentMinutes)
       .sort((a, b) => a.mins - b.mins)
 
     if (sortedFuture.length > 0) {
-      const items = sortedFuture.slice(0, 3).map(s => `${s.title} at ${s.time}`)
+      const items = sortedFuture.slice(0, 3).map(s => `${s.title} ${s.time}`)
       return `Today's upcoming: ${items.join(', ')}.`
     }
 
@@ -416,12 +706,10 @@ export default function SakshiAssistant({ triggerReminder }) {
             {/* Header */}
             <div className="bg-gradient-to-r from-primary-500 to-teal-500 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                  <Brain size={18} className="text-white" />
-                </div>
+                <BrahmiLogo size={36} />
                 <div>
                   <h3 className="text-white font-semibold text-sm">Sakshi</h3>
-                  <p className="text-white/70 text-xs">Your Care Assistant</p>
+                  <p className="text-white/70 text-xs">{t('sakshi.headerSubtitle')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -458,7 +746,7 @@ export default function SakshiAssistant({ triggerReminder }) {
                 >
                   <div className="flex items-center gap-2 text-white text-xs font-medium">
                     <AlertTriangle size={14} className="animate-pulse" />
-                    Emergency mode active — Help is on the way
+                    {t('sakshi.emergencyActive')}
                   </div>
                 </motion.div>
               )}
@@ -478,7 +766,7 @@ export default function SakshiAssistant({ triggerReminder }) {
                 >
                   {msg.sender === 'sakshi' && (
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-400 to-teal-400 flex items-center justify-center mr-2 flex-shrink-0 mt-1">
-                      <Brain size={12} className="text-white" />
+                      <BrahmiLogo size={16} />
                     </div>
                   )}
                   <div
@@ -503,7 +791,7 @@ export default function SakshiAssistant({ triggerReminder }) {
                   className="flex items-center gap-2"
                 >
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-400 to-teal-400 flex items-center justify-center">
-                    <Brain size={12} className="text-white" />
+                    <BrahmiLogo size={16} />
                   </div>
                   <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-md">
                     <div className="flex gap-1">
@@ -522,28 +810,40 @@ export default function SakshiAssistant({ triggerReminder }) {
             <div className="px-3 py-2 border-t border-gray-100">
               <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                 <button
+                  onClick={() => handleUserMessage('What is my next task?')}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full bg-primary-50 text-primary-600 text-xs font-medium hover:bg-primary-100 transition-colors"
+                >
+                  {t('sakshi.quickActions.nextTask')}
+                </button>
+                <button
                   onClick={() => handleUserMessage('How is my schedule today?')}
                   className="flex-shrink-0 px-3 py-1.5 rounded-full bg-primary-50 text-primary-600 text-xs font-medium hover:bg-primary-100 transition-colors"
                 >
-                  📋 Today's Schedule
+                  {t('sakshi.quickActions.fullSchedule')}
                 </button>
                 <button
                   onClick={() => handleUserMessage('I want to play games')}
                   className="flex-shrink-0 px-3 py-1.5 rounded-full bg-teal-50 text-teal-600 text-xs font-medium hover:bg-teal-100 transition-colors"
                 >
-                  🎮 Play Games
+                  {t('sakshi.quickActions.games')}
                 </button>
                 <button
                   onClick={() => handleUserMessage('Tell me about my family')}
                   className="flex-shrink-0 px-3 py-1.5 rounded-full bg-rose-50 text-rose-600 text-xs font-medium hover:bg-rose-100 transition-colors"
                 >
-                  👨‍👩‍👧 Family
+                  {t('sakshi.quickActions.family')}
                 </button>
                 <button
-                  onClick={() => handleUserMessage('I need help')}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full bg-red-50 text-red-600 text-xs font-medium hover:bg-red-100 transition-colors"
+                  onClick={() => handleUserMessage('What time is it?')}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full bg-amber-50 text-amber-600 text-xs font-medium hover:bg-amber-100 transition-colors"
                 >
-                  🆘 Need Help
+                  {t('sakshi.quickActions.time')}
+                </button>
+                <button
+                  onClick={() => handleUserMessage('Tell me a joke')}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full bg-violet-50 text-violet-600 text-xs font-medium hover:bg-violet-100 transition-colors"
+                >
+                  {t('sakshi.quickActions.joke')}
                 </button>
               </div>
             </div>
@@ -563,7 +863,7 @@ export default function SakshiAssistant({ triggerReminder }) {
                     <span className="w-1 h-3.5 bg-primary-500 rounded-full animate-pulse" style={{ animationDelay: '450ms' }} />
                   </div>
                   <span className="text-xs text-primary-600 font-medium">
-                    {interimText || "Listening..."}
+                    {interimText || t('sakshi.listening')}
                   </span>
                 </div>
               </motion.div>
@@ -581,7 +881,7 @@ export default function SakshiAssistant({ triggerReminder }) {
                       handleUserMessage(inputText)
                     }
                   }}
-                  placeholder={isListening ? "Listening..." : "Talk to Sakshi..."}
+                  placeholder={isListening ? t('sakshi.listening') : t('sakshi.talkToSakshi')}
                   className="flex-1 bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
                   readOnly={isListening}
                 />
@@ -615,11 +915,18 @@ export default function SakshiAssistant({ triggerReminder }) {
                 onClick={() => {
                   setEmergencyMode(true)
                   handleUserMessage('I need help urgently')
+                  // Also send SMS
+                  import('../../utils/emergencyService.js').then(({ sendEmergencySMS, isValidPhone }) => {
+                    const phone = emergencyContact?.phone
+                    if (phone && isValidPhone(phone)) {
+                      sendEmergencySMS(phone, patientName, 'Emergency button pressed via Sakshi AI')
+                    }
+                  }).catch(() => {})
                 }}
                 className="w-full py-2.5 rounded-xl bg-red-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
               >
                 <Phone size={14} />
-                Emergency Call
+                {t('sakshi.emergencyCall')}
               </motion.button>
             </div>
           </motion.div>

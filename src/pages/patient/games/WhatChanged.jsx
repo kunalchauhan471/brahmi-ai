@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, Check, X, Trophy, RotateCcw } from 'lucide-react'
+import { useLanguage } from '../../../i18n/LanguageContext'
 
 const scenes = [
   {
@@ -113,6 +114,7 @@ function SceneDisplay({ items, highlight }) {
 
 export default function WhatChanged() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [gameState, setGameState] = useState('setup')
   const [round, setRound] = useState(0)
   const [selected, setSelected] = useState(null)
@@ -160,7 +162,7 @@ export default function WhatChanged() {
             >
               <ArrowLeft size={20} className="text-gray-600" />
             </motion.button>
-            <h1 className="text-lg font-bold text-gray-900">Spot the Difference</h1>
+            <h1 className="text-lg font-bold text-gray-900">{t('games.spotDifference.name')}</h1>
           </div>
         </div>
         <div className="max-w-lg mx-auto px-4 py-12 text-center">
@@ -168,9 +170,9 @@ export default function WhatChanged() {
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-violet-500/25">
               <Eye size={36} className="text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Spot the Difference</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.spotDifference.name')}</h2>
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              Compare two scenes side by side. One item is missing from the right scene — can you find it?
+              {t('games.spotDifference.instructions')}
             </p>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -178,7 +180,7 @@ export default function WhatChanged() {
               onClick={startGame}
               className="px-8 py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 text-white font-bold text-lg shadow-xl shadow-violet-500/25"
             >
-              Start Game
+              {t('common.startGame')}
             </motion.button>
           </motion.div>
         </div>
@@ -194,8 +196,8 @@ export default function WhatChanged() {
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-500/25">
               <Trophy size={40} className="text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Sharp Observer!</h2>
-            <p className="text-gray-500 mb-6">You spotted all the differences!</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('games.spotDifference.sharpObserver')}</h2>
+            <p className="text-gray-500 mb-6">{t('games.spotDifference.spottedAll')}</p>
             <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary-50 to-teal-50 border border-primary-100 mb-8">
               <span className="text-3xl font-bold gradient-text">{score}</span>
               <span className="text-gray-500">total points</span>
@@ -239,7 +241,7 @@ export default function WhatChanged() {
               >
                 <ArrowLeft size={20} className="text-gray-600" />
               </motion.button>
-              <h1 className="text-lg font-bold text-gray-900">Spot the Difference</h1>
+              <h1 className="text-lg font-bold text-gray-900">{t('games.spotDifference.name')}</h1>
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-400">Scene {round + 1}/{scenes.length}</span>

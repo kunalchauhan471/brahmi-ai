@@ -21,6 +21,8 @@ const initialPatientData = {
   age: '',
   gender: '',
   language: 'English',
+  voice: 'female',
+  speechSpeed: 'normal',
 }
 
 const initialEmergencyContact = {

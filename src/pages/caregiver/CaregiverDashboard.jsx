@@ -1,12 +1,16 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
-  Brain, ArrowLeft, Users, Calendar, Clock, Gamepad2,
+  ArrowLeft, Users, Calendar, Clock, Gamepad2,
   Camera, Heart, TrendingUp, Activity, Pill, UtensilsCrossed,
-  Bell, Moon, Settings, ChevronRight, Star, BarChart3
+  Bell, Moon, Settings, ChevronRight, Star, BarChart3,
+  Watch, Wifi, WifiOff, Battery, Shield, AlertTriangle, Brain, Sparkles, Footprints, Flame
 } from 'lucide-react'
 import { useData } from '../../context/DataContext'
+import { useLanguage } from '../../i18n/LanguageContext'
+import { useSmartwatch } from '../../context/SmartwatchContext'
 import Card from '../../components/ui/Card'
+import BrahmiLogo from '../../components/ui/BrahmiLogo'
 
 const typeIcons = {
   medicine: Pill,
@@ -48,6 +52,8 @@ const gameStats = [
 export default function CaregiverDashboard() {
   const navigate = useNavigate()
   const { patientData, schedule, memories, completedGames } = useData()
+  const { t } = useLanguage()
+  const { healthData, timeline, alerts, insights, weeklyData, emergencyEvents } = useSmartwatch()
 
   const totalGamesPlayed = gameStats.reduce((acc, g) => acc + g.played, 0)
   const avgScore = Math.round(gameStats.reduce((acc, g) => acc + g.best, 0) / gameStats.length)
@@ -68,12 +74,10 @@ export default function CaregiverDashboard() {
                 <ArrowLeft size={20} className="text-gray-600" />
               </motion.button>
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center shadow-lg shadow-primary-500/20">
-                  <Brain size={18} className="text-white" />
-                </div>
+                <BrahmiLogo size={36} />
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900">Caregiver Dashboard</h1>
-                  <p className="text-xs text-gray-400">Monitor patient progress</p>
+                  <h1 className="text-lg font-bold text-gray-900">{t('caregiver.dashboard.title')}</h1>
+                  <p className="text-xs text-gray-400">{t('caregiver.dashboard.subtitle')}</p>
                 </div>
               </div>
             </div>
@@ -81,7 +85,7 @@ export default function CaregiverDashboard() {
               onClick={() => navigate('/patient')}
               className="px-4 py-2 rounded-xl bg-primary-50 text-primary-600 font-medium text-sm hover:bg-primary-100 transition-colors"
             >
-              Patient View
+              {t('caregiver.dashboard.patientView')}
             </button>
           </div>
         </div>
@@ -108,11 +112,11 @@ export default function CaregiverDashboard() {
               <div className="flex gap-6 text-center">
                 <div>
                   <div className="text-2xl font-bold gradient-text">{totalGamesPlayed}</div>
-                  <div className="text-xs text-gray-400">Games Played</div>
+                  <div className="text-xs text-gray-400">{t('caregiver.dashboard.gamesPlayed')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold gradient-text">{avgScore}%</div>
-                  <div className="text-xs text-gray-400">Avg Score</div>
+                  <div className="text-xs text-gray-400">{t('caregiver.dashboard.avgScore')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold gradient-text">{memories.length}</div>
@@ -135,7 +139,7 @@ export default function CaregiverDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <BarChart3 size={18} className="text-primary-500" />
-                  <h3 className="font-semibold text-gray-900">Weekly Activity</h3>
+                  <h3 className="font-semibold text-gray-900">{t('caregiver.dashboard.weeklyActivity')}</h3>
                 </div>
                 <span className="text-xs text-gray-400">This week</span>
               </div>
@@ -165,7 +169,7 @@ export default function CaregiverDashboard() {
             <Card className="h-full">
               <div className="flex items-center gap-2 mb-4">
                 <Clock size={18} className="text-amber-500" />
-                <h3 className="font-semibold text-gray-900">Today's Schedule</h3>
+                <h3 className="font-semibold text-gray-900">{t('caregiver.dashboard.todaySchedule')}</h3>
               </div>
               <div className="space-y-3">
                 {schedule.slice(0, 5).map((reminder) => {
@@ -197,7 +201,7 @@ export default function CaregiverDashboard() {
             <Card>
               <div className="flex items-center gap-2 mb-4">
                 <Gamepad2 size={18} className="text-teal-500" />
-                <h3 className="font-semibold text-gray-900">Game Performance</h3>
+                <h3 className="font-semibold text-gray-900">{t('caregiver.dashboard.gamePerformance')}</h3>
               </div>
               <div className="space-y-3">
                 {gameStats.map((game, i) => {
@@ -236,7 +240,7 @@ export default function CaregiverDashboard() {
             <Card>
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={18} className="text-rose-500" />
-                <h3 className="font-semibold text-gray-900">Recent Activity</h3>
+                <h3 className="font-semibold text-gray-900">{t('caregiver.dashboard.recentActivity')}</h3>
               </div>
               <div className="space-y-3">
                 {recentActivity.map((activity) => {
@@ -263,6 +267,172 @@ export default function CaregiverDashboard() {
           </motion.div>
         </div>
 
+        {/* Smart Health Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Watch size={18} className="text-primary-500" />
+              <h3 className="font-semibold text-gray-900">Smart Health Monitor</h3>
+              <div className="flex items-center gap-1.5 ml-2">
+                <span className={`w-2 h-2 rounded-full ${healthData.connected ? 'bg-emerald-400' : 'bg-gray-300'}`} />
+                <span className="text-xs text-gray-400">{healthData.connected ? 'Connected' : 'Disconnected'}</span>
+              </div>
+            </div>
+          </div>
+
+          {healthData.connected ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Health Overview Cards */}
+              <div className="lg:col-span-1 space-y-3">
+                <Card>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center shadow-md">
+                      <Heart size={22} className="text-white fill-white" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400">Current Heart Rate</div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold text-gray-900">{healthData.heartRate}</span>
+                        <span className="text-xs text-gray-400">BPM</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-gray-100">
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400">Avg</div>
+                      <div className="text-sm font-bold text-gray-700">{healthData.heartRate - 2}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400">Max</div>
+                      <div className="text-sm font-bold text-gray-700">{healthData.heartRate + 8}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-400">Min</div>
+                      <div className="text-sm font-bold text-gray-700">{healthData.heartRate - 6}</div>
+                    </div>
+                  </div>
+                </Card>
+                <Card>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2">
+                      <Footprints size={16} className="text-blue-500" />
+                      <div>
+                        <div className="text-xs text-gray-400">Steps</div>
+                        <div className="text-sm font-bold text-gray-700">{healthData.steps.toLocaleString()}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Flame size={16} className="text-orange-500" />
+                      <div>
+                        <div className="text-xs text-gray-400">Calories</div>
+                        <div className="text-sm font-bold text-gray-700">{healthData.calories}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Battery size={16} className="text-emerald-500" />
+                      <div>
+                        <div className="text-xs text-gray-400">Battery</div>
+                        <div className="text-sm font-bold text-gray-700">{healthData.battery}%</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Wifi size={16} className="text-primary-500" />
+                      <div>
+                        <div className="text-xs text-gray-400">Signal</div>
+                        <div className="text-sm font-bold text-gray-700">{healthData.signalStrength}%</div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Heart Rate Trend Chart */}
+              <div className="lg:col-span-1">
+                <Card className="h-full">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp size={18} className="text-rose-500" />
+                    <h4 className="font-semibold text-gray-900">Heart Rate Trend</h4>
+                  </div>
+                  <div className="flex items-end gap-2 h-36">
+                    {weeklyData.map((day, i) => (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                        <span className="text-[10px] text-gray-400">{Math.round(day.heartRate.reduce((a, b) => a + b, 0) / day.heartRate.length)}</span>
+                        <motion.div
+                          initial={{ height: 0 }}
+                          animate={{ height: `${((Math.round(day.heartRate.reduce((a, b) => a + b, 0) / day.heartRate.length) - 60) / 30) * 100}%` }}
+                          transition={{ delay: 0.3 + i * 0.05, duration: 0.4 }}
+                          className="w-full rounded-t-lg bg-gradient-to-t from-rose-400 to-pink-300 min-h-[4px]"
+                        />
+                        <span className="text-[10px] text-gray-400">{day.day}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400 mt-2 pt-2 border-t border-gray-100">
+                    <span>Avg: {Math.round(weeklyData.reduce((acc, d) => acc + d.heartRate.reduce((a, b) => a + b, 0) / d.heartRate.length, 0) / weeklyData.length)} BPM</span>
+                    <span>Max: {Math.max(...weeklyData.flatMap(d => d.heartRate))} BPM</span>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Alerts & Timeline */}
+              <div className="lg:col-span-1 space-y-3">
+                <Card>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield size={18} className="text-amber-500" />
+                    <h4 className="font-semibold text-gray-900">Health Alerts</h4>
+                    {alerts.length > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-bold">{alerts.length}</span>
+                    )}
+                  </div>
+                  {alerts.length === 0 ? (
+                    <div className="text-sm text-gray-400 py-3 text-center">No recent alerts</div>
+                  ) : (
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {alerts.slice(-3).reverse().map(alert => (
+                        <div key={alert.id} className={`p-2 rounded-lg text-xs ${
+                          alert.priority === 'Critical' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+                        }`}>
+                          <div className="font-medium">{alert.parameter}: {alert.value}</div>
+                          <div className="opacity-70 mt-0.5">{alert.action}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+                <Card>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Clock size={18} className="text-primary-500" />
+                    <h4 className="font-semibold text-gray-900">Health Timeline</h4>
+                  </div>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {timeline.slice(-5).reverse().map(entry => (
+                      <div key={entry.id} className="flex items-center gap-2 text-xs">
+                        <span className="text-gray-400 w-12 flex-shrink-0">{entry.time}</span>
+                        <span className="text-gray-600 truncate">{entry.event}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          ) : (
+            <Card>
+              <div className="text-center py-8">
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                  <Watch size={28} className="text-gray-300" />
+                </div>
+                <h4 className="font-semibold text-gray-700 mb-1">No Smartwatch Connected</h4>
+                <p className="text-sm text-gray-400">Patient needs to connect their smartwatch from the Patient Dashboard to start health monitoring.</p>
+              </div>
+            </Card>
+          )}
+        </motion.div>
+
         {/* Memory Vault Quick View */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -273,8 +443,8 @@ export default function CaregiverDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Camera size={18} className="text-pink-500" />
-                <h3 className="font-semibold text-gray-900">Memory Vault</h3>
-                <span className="text-xs text-gray-400">({memories.length} memories)</span>
+                <h3 className="font-semibold text-gray-900">{t('caregiver.dashboard.memoryVault')}</h3>
+                <span className="text-xs text-gray-400">{t('caregiver.dashboard.memoriesCount', { count: memories.length })}</span>
               </div>
             </div>
             <div className="flex flex-wrap gap-3">

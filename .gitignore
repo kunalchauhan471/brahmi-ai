@@ -23,3 +23,8 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+.vercel
+node_modules/
+.freebuff/
+.env

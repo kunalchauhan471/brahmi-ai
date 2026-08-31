@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { UserCircle, Calendar, Globe } from 'lucide-react'
 import { useData } from '../../../context/DataContext'
+import { useLanguage } from '../../../i18n/LanguageContext'
 import Input from '../../../components/ui/Input'
 import Select from '../../../components/ui/Select'
 import Card from '../../../components/ui/Card'
@@ -14,18 +15,20 @@ const genderOptions = [
 const languageOptions = [
   { value: 'English', label: 'English' },
   { value: 'Hindi', label: 'Hindi' },
-  { value: 'Tamil', label: 'Tamil' },
-  { value: 'Telugu', label: 'Telugu' },
+  { value: 'Assamese', label: 'Assamese' },
   { value: 'Bengali', label: 'Bengali' },
-  { value: 'Marathi', label: 'Marathi' },
-  { value: 'Gujarati', label: 'Gujarati' },
-  { value: 'Kannada', label: 'Kannada' },
-  { value: 'Malayalam', label: 'Malayalam' },
-  { value: 'Punjabi', label: 'Punjabi' },
+  { value: 'Manipuri', label: 'Manipuri (Meitei)' },
+  { value: 'Mizo', label: 'Mizo' },
+  { value: 'Khasi', label: 'Khasi' },
+  { value: 'Garo', label: 'Garo' },
+  { value: 'Nepali', label: 'Nepali' },
+  { value: 'Bodo', label: 'Bodo' },
+  { value: 'Kokborok', label: 'Kokborok' },
 ]
 
 export default function PatientInfoStep() {
   const { patientData, setPatientData } = useData()
+  const { t } = useLanguage()
 
   return (
     <Card>
@@ -34,15 +37,15 @@ export default function PatientInfoStep() {
           <UserCircle size={24} className="text-white" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Patient Information</h2>
-          <p className="text-gray-500 text-sm">Tell us about the patient we're helping.</p>
+          <h2 className="text-2xl font-bold text-gray-900">{t('setup.patientInfo.title')}</h2>
+          <p className="text-gray-500 text-sm">{t('setup.patientInfo.desc')}</p>
         </div>
       </div>
 
       <div className="space-y-5">
         <Input
-          label="Patient's Name"
-          placeholder="e.g., Rajesh Sharma"
+          label={t('setup.patientInfo.name')}
+          placeholder={t('setup.patientInfo.namePlaceholder')}
           value={patientData.name}
           onChange={(e) => setPatientData(prev => ({ ...prev, name: e.target.value }))}
           icon={UserCircle}
@@ -50,9 +53,9 @@ export default function PatientInfoStep() {
         />
 
         <Input
-          label="Age"
+          label={t('setup.patientInfo.age')}
           type="number"
-          placeholder="e.g., 72"
+          placeholder={t('setup.patientInfo.agePlaceholder')}
           value={patientData.age}
           onChange={(e) => setPatientData(prev => ({ ...prev, age: e.target.value }))}
           icon={Calendar}
@@ -60,20 +63,20 @@ export default function PatientInfoStep() {
         />
 
         <Select
-          label="Gender"
+          label={t('setup.patientInfo.gender')}
           value={patientData.gender}
           onChange={(e) => setPatientData(prev => ({ ...prev, gender: e.target.value }))}
           options={genderOptions}
-          placeholder="Select gender"
+          placeholder={t('setup.patientInfo.genderPlaceholder')}
           required
         />
 
         <Select
-          label="Preferred Language"
+          label={t('setup.patientInfo.language')}
           value={patientData.language}
           onChange={(e) => setPatientData(prev => ({ ...prev, language: e.target.value }))}
           options={languageOptions}
-          placeholder="Select language"
+          placeholder={t('setup.patientInfo.languagePlaceholder')}
           required
         />
       </div>

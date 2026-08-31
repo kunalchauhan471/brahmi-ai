@@ -5,6 +5,7 @@ import {
   ArrowLeft, Check, Trophy, RotateCcw, ListOrdered,
   GripVertical, Sun, Brush, Coffee, Pill, Footprints, Moon, Bed
 } from 'lucide-react'
+import { useLanguage } from '../../../i18n/LanguageContext'
 
 const routineItems = [
   { id: 1, label: 'Wake Up', icon: Sun, emoji: '🌅', color: 'from-amber-400 to-orange-500' },
@@ -19,6 +20,7 @@ const routineItems = [
 
 export default function RoutineSequencer() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [gameState, setGameState] = useState('setup')
   const [items, setItems] = useState([])
   const [score, setScore] = useState(0)
@@ -78,7 +80,7 @@ export default function RoutineSequencer() {
             >
               <ArrowLeft size={20} className="text-gray-600" />
             </motion.button>
-            <h1 className="text-xl font-bold text-gray-900">Daily Routine Sequencer</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('games.routineSequencer.name')}</h1>
           </div>
         </div>
 
@@ -87,9 +89,9 @@ export default function RoutineSequencer() {
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-500/25">
               <ListOrdered size={36} className="text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Daily Routine Sequencer</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.routineSequencer.name')}</h2>
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              Arrange your daily activities in the correct order. Drag the cards to reorder them!
+              {t('games.routineSequencer.instructions')}
             </p>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -97,7 +99,7 @@ export default function RoutineSequencer() {
               onClick={startGame}
               className="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-lg shadow-xl shadow-amber-500/25"
             >
-              Start Game
+              {t('common.startGame')}
             </motion.button>
           </motion.div>
         </div>
@@ -113,8 +115,8 @@ export default function RoutineSequencer() {
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-500/25">
               <Trophy size={40} className="text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Great Sequencing!</h2>
-            <p className="text-gray-500 mb-6">You know your daily routine well!</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('games.routineSequencer.greatSequencing')}</h2>
+            <p className="text-gray-500 mb-6">{t('games.routineSequencer.knowRoutine')}</p>
             <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary-50 to-teal-50 border border-primary-100 mb-8">
               <span className="text-3xl font-bold gradient-text">{score}</span>
               <span className="text-gray-500">total points</span>
@@ -170,8 +172,8 @@ export default function RoutineSequencer() {
 
       <div className="max-w-lg mx-auto px-4 py-8">
         <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Put activities in the right order</h2>
-          <p className="text-sm text-gray-500">Tap two cards to swap them</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{t('games.routineSequencer.putOrder')}</h2>
+          <p className="text-sm text-gray-500">{t('games.routineSequencer.tapSwap')}</p>
         </div>
 
         {/* Result overlay */}
@@ -186,7 +188,7 @@ export default function RoutineSequencer() {
               {result.correct ? (
                 <>
                   <Check size={32} className="text-emerald-500 mx-auto mb-2" />
-                  <p className="text-lg font-bold text-emerald-600">Perfect Order!</p>
+                  <p className="text-lg font-bold text-emerald-600">{t('games.routineSequencer.perfectOrder')}</p>
                 </>
               ) : (
                 <p className="text-lg font-semibold text-gray-700">
@@ -232,7 +234,7 @@ export default function RoutineSequencer() {
               onClick={checkOrder}
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-lg shadow-lg shadow-amber-500/25"
             >
-              Check Order
+              {t('games.routineSequencer.checkOrder')}
             </motion.button>
           ) : (
             <motion.button
@@ -248,7 +250,7 @@ export default function RoutineSequencer() {
               }}
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-lg shadow-lg shadow-amber-500/25"
             >
-              {round < totalRounds ? 'Next Round →' : 'See Results'}
+              {round < totalRounds ? t('games.routineSequencer.nextRound') : t('games.routineSequencer.seeResults')}
             </motion.button>
           )}
         </div>

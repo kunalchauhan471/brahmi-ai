@@ -4,6 +4,7 @@ import {
   Camera, Plus, Trash2, User, Heart, FileText, ImagePlus
 } from 'lucide-react'
 import { useData } from '../../../context/DataContext'
+import { useLanguage } from '../../../i18n/LanguageContext'
 import Input from '../../../components/ui/Input'
 import Select from '../../../components/ui/Select'
 import Card from '../../../components/ui/Card'
@@ -41,6 +42,7 @@ const colorOptions = [
 
 export default function MemoryVaultStep() {
   const { memories, addMemory, removeMemory } = useData()
+  const { t } = useLanguage()
   const [showForm, setShowForm] = useState(false)
   const [newMemory, setNewMemory] = useState({
     name: '',
@@ -73,8 +75,8 @@ export default function MemoryVaultStep() {
               <Camera size={24} className="text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Memory Vault</h2>
-              <p className="text-gray-500 text-sm">Add family members and loved ones for memory games.</p>
+              <h2 className="text-2xl font-bold text-gray-900">{t('setup.memories.title')}</h2>
+              <p className="text-gray-500 text-sm">{t('setup.memories.desc')}</p>
             </div>
           </div>
           <motion.button
@@ -84,7 +86,7 @@ export default function MemoryVaultStep() {
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-pink-50 text-pink-600 font-medium text-sm hover:bg-pink-100 transition-colors"
           >
             <Plus size={16} />
-            Add Memory
+            {t('setup.memories.addMemory')}
           </motion.button>
         </div>
 
@@ -106,15 +108,15 @@ export default function MemoryVaultStep() {
                   <div>
                     <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
                       <ImagePlus size={16} />
-                      Upload Photo
+                      {t('setup.memories.uploadPhoto')}
                     </button>
-                    <p className="text-xs text-gray-400 mt-1">JPG, PNG (max 5MB)</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('setup.memories.photoHint')}</p>
                   </div>
                 </div>
 
                 {/* Emoji selector */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Choose Avatar</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('setup.memories.chooseAvatar')}</label>
                   <div className="flex gap-2 flex-wrap">
                     {emojiOptions.map((emoji) => (
                       <button
@@ -134,27 +136,27 @@ export default function MemoryVaultStep() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
-                    label="Name"
-                    placeholder="e.g., Amit"
+                    label={t('setup.memories.name')}
+                    placeholder={t('setup.memories.namePlaceholder')}
                     value={newMemory.name}
                     onChange={(e) => setNewMemory(prev => ({ ...prev, name: e.target.value }))}
                     icon={User}
                     required
                   />
                   <Select
-                    label="Relationship"
+                    label={t('setup.memories.relationship')}
                     value={newMemory.relationship}
                     onChange={(e) => setNewMemory(prev => ({ ...prev, relationship: e.target.value }))}
                     options={relationshipOptions}
-                    placeholder="Select relationship"
+                    placeholder={t('setup.memories.relationshipPlaceholder')}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('setup.memories.description')}</label>
                   <textarea
-                    placeholder="e.g., Lives in Delhi and visits every Sunday. Works as a software engineer."
+                    placeholder={t('setup.memories.descPlaceholder')}
                     value={newMemory.description}
                     onChange={(e) => setNewMemory(prev => ({ ...prev, description: e.target.value }))}
                     rows={3}
@@ -173,13 +175,13 @@ export default function MemoryVaultStep() {
                     onClick={handleAdd}
                     className="px-4 py-2 rounded-lg bg-pink-500 text-white text-sm font-medium hover:bg-pink-600 transition-colors"
                   >
-                    Add to Vault
+                    {t('setup.memories.addToVault')}
                   </button>
                   <button
                     onClick={() => setShowForm(false)}
                     className="px-4 py-2 rounded-lg bg-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-300 transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 </div>
               </div>
@@ -230,7 +232,7 @@ export default function MemoryVaultStep() {
         {memories.length === 0 && (
           <div className="text-center py-12">
             <Camera size={48} className="text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-400">No memories added yet. Start by adding family members!</p>
+            <p className="text-gray-400">{t('setup.memories.emptyState')}</p>
           </div>
         )}
       </Card>

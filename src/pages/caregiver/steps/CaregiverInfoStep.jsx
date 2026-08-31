@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion'
 import { User, Mail, Phone, Heart } from 'lucide-react'
 import { useData } from '../../../context/DataContext'
+import { useLanguage } from '../../../i18n/LanguageContext'
 import Input from '../../../components/ui/Input'
 import Card from '../../../components/ui/Card'
 
 export default function CaregiverInfoStep() {
   const { caregiverData, setCaregiverData } = useData()
+  const { t } = useLanguage()
 
   return (
     <div>
@@ -15,15 +17,15 @@ export default function CaregiverInfoStep() {
             <Heart size={24} className="text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Caregiver Information</h2>
-            <p className="text-gray-500 text-sm">Tell us about yourself so we can set things up.</p>
+            <h2 className="text-2xl font-bold text-gray-900">{t('setup.caregiverInfo.title')}</h2>
+            <p className="text-gray-500 text-sm">{t('setup.caregiverInfo.desc')}</p>
           </div>
         </div>
 
         <div className="space-y-5">
           <Input
-            label="Your Full Name"
-            placeholder="e.g., Anita Sharma"
+            label={t('setup.caregiverInfo.name')}
+            placeholder={t('setup.caregiverInfo.namePlaceholder')}
             value={caregiverData.name}
             onChange={(e) => setCaregiverData(prev => ({ ...prev, name: e.target.value }))}
             icon={User}
@@ -31,9 +33,9 @@ export default function CaregiverInfoStep() {
           />
 
           <Input
-            label="Email Address"
+            label={t('setup.caregiverInfo.email')}
             type="email"
-            placeholder="e.g., anita@example.com"
+            placeholder={t('setup.caregiverInfo.emailPlaceholder')}
             value={caregiverData.email}
             onChange={(e) => setCaregiverData(prev => ({ ...prev, email: e.target.value }))}
             icon={Mail}
@@ -41,9 +43,9 @@ export default function CaregiverInfoStep() {
           />
 
           <Input
-            label="Phone Number"
+            label={t('setup.caregiverInfo.phone')}
             type="tel"
-            placeholder="e.g., +91 98765 43210"
+            placeholder={t('setup.caregiverInfo.phonePlaceholder')}
             value={caregiverData.phone}
             onChange={(e) => setCaregiverData(prev => ({ ...prev, phone: e.target.value }))}
             icon={Phone}
@@ -54,8 +56,7 @@ export default function CaregiverInfoStep() {
 
       <div className="p-4 rounded-xl bg-primary-50 border border-primary-100">
         <p className="text-sm text-primary-700">
-          <strong>Note:</strong> Your information is stored locally on this device only. 
-          It is never sent to any server.
+          {t('setup.caregiverInfo.note')}
         </p>
       </div>
     </div>

@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Brain, ArrowLeft, ArrowRight, Check } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
+import { useLanguage } from '../../i18n/LanguageContext'
 import { useData } from '../../context/DataContext'
 import StepIndicator from '../../components/ui/StepIndicator'
+import BrahmiLogo from '../../components/ui/BrahmiLogo'
 import CaregiverInfoStep from './steps/CaregiverInfoStep'
 import PatientInfoStep from './steps/PatientInfoStep'
 import EmergencyContactStep from './steps/EmergencyContactStep'
 import DailyScheduleStep from './steps/DailyScheduleStep'
 import MemoryVaultStep from './steps/MemoryVaultStep'
 import ReviewStep from './steps/ReviewStep'
-
 const STEPS = ['Caregiver', 'Patient', 'Emergency', 'Schedule', 'Memories', 'Review']
 
 const stepComponents = [
@@ -25,6 +26,7 @@ const stepComponents = [
 export default function SetupPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const { setPatientMode } = useData()
 
   const StepComponent = stepComponents[currentStep]
@@ -58,15 +60,13 @@ export default function SetupPage() {
             >
               <ArrowLeft size={18} />
               <span className="text-sm font-medium">
-                {currentStep === 0 ? 'Home' : 'Back'}
+                {currentStep === 0 ? t('common.home') : t('common.back')}
               </span>
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center">
-                <Brain size={16} className="text-white" />
-              </div>
+              <BrahmiLogo size={32} />
               <span className="font-bold text-gray-900">
-                Cogni<span className="gradient-text">Care</span>
+                {t('common.appName')}
               </span>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default function SetupPage() {
             `}
           >
             <ArrowLeft size={18} />
-            Previous
+            {t('common.previous')}
           </button>
 
           {currentStep === STEPS.length - 1 ? (
@@ -114,7 +114,7 @@ export default function SetupPage() {
               className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-shadow"
             >
               <Check size={18} />
-              Activate Patient Mode
+              {t('setup.activate')}
             </motion.button>
           ) : (
             <motion.button
@@ -123,7 +123,7 @@ export default function SetupPage() {
               onClick={handleNext}
               className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold shadow-lg shadow-primary-500/25 hover:shadow-xl transition-shadow"
             >
-              Next
+              {t('common.next')}
               <ArrowRight size={18} />
             </motion.button>
           )}

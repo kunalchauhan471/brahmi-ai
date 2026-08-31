@@ -5,10 +5,12 @@ import {
   ArrowLeft, Check, X, Trophy, RotateCcw, Users, Star
 } from 'lucide-react'
 import { useData } from '../../../context/DataContext'
+import { useLanguage } from '../../../i18n/LanguageContext'
 
 export default function FamilyFaceMatch() {
   const navigate = useNavigate()
   const { memories, completeGame } = useData()
+  const { t } = useLanguage()
   const [gameState, setGameState] = useState('setup') // setup, playing, gameover
   const [currentTarget, setCurrentTarget] = useState(null)
   const [options, setOptions] = useState([])
@@ -79,7 +81,7 @@ export default function FamilyFaceMatch() {
             >
               <ArrowLeft size={20} className="text-gray-600" />
             </motion.button>
-            <h1 className="text-xl font-bold text-gray-900">Family Face Match</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('games.faceMatch.name')}</h1>
           </div>
         </div>
 
@@ -88,9 +90,9 @@ export default function FamilyFaceMatch() {
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-rose-500/25">
               <Users size={36} className="text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Family Face Match</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.faceMatch.name')}</h2>
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              We'll show you a name. Find the right family member from the photos below!
+              {t('games.faceMatch.instructions')}
             </p>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -98,7 +100,7 @@ export default function FamilyFaceMatch() {
               onClick={startGame}
               className="px-8 py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold text-lg shadow-xl shadow-rose-500/25"
             >
-              Start Game
+              {t('common.startGame')}
             </motion.button>
           </motion.div>
         </div>
@@ -114,8 +116,8 @@ export default function FamilyFaceMatch() {
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-500/25">
               <Trophy size={40} className="text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Amazing!</h2>
-            <p className="text-gray-500 mb-6">You're getting better at recognizing faces!</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('games.faceMatch.amazing')}</h2>
+            <p className="text-gray-500 mb-6">{t('games.faceMatch.betterAtFaces')}</p>
             <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary-50 to-teal-50 border border-primary-100 mb-8">
               <Star size={24} className="text-amber-400 fill-amber-400" />
               <span className="text-3xl font-bold gradient-text">{score}</span>
@@ -160,7 +162,7 @@ export default function FamilyFaceMatch() {
               >
                 <ArrowLeft size={20} className="text-gray-600" />
               </motion.button>
-              <h1 className="text-lg font-bold text-gray-900">Face Match</h1>
+              <h1 className="text-lg font-bold text-gray-900">{t('games.faceMatch.shortName')}</h1>
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-400">Round {round}/{totalRounds}</span>
@@ -186,7 +188,7 @@ export default function FamilyFaceMatch() {
           >
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Find <span className="gradient-text">{currentTarget?.name}</span>
+                {t('games.faceMatch.findPerson', { name: currentTarget?.name })}
               </h2>
               <p className="text-gray-500">Tap the correct photo below</p>
             </div>

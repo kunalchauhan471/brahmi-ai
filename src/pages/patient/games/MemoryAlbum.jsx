@@ -6,6 +6,7 @@ import {
   Trophy, RotateCcw, Camera, Heart
 } from 'lucide-react'
 import { useData } from '../../../context/DataContext'
+import { useLanguage } from '../../../i18n/LanguageContext'
 
 const difficulties = [
   { level: 'Easy', options: 2, label: '2 choices' },
@@ -16,6 +17,7 @@ const difficulties = [
 export default function MemoryAlbum() {
   const navigate = useNavigate()
   const { memories, completeGame, completedGames } = useData()
+  const { t } = useLanguage()
   const [difficulty, setDifficulty] = useState(null)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [score, setScore] = useState(0)
@@ -76,7 +78,7 @@ export default function MemoryAlbum() {
             >
               <ArrowLeft size={20} className="text-gray-600" />
             </motion.button>
-            <h1 className="text-xl font-bold text-gray-900">My Memory Album</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('games.memoryAlbum.name')}</h1>
           </div>
         </div>
 
@@ -89,8 +91,8 @@ export default function MemoryAlbum() {
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-500/25">
               <Camera size={36} className="text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">My Memory Album</h2>
-            <p className="text-gray-500">Choose how challenging you'd like it to be</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.memoryAlbum.name')}</h2>
+            <p className="text-gray-500">{t('games.memoryAlbum.difficultyDesc')}</p>
           </motion.div>
 
           <div className="space-y-4">
@@ -113,8 +115,8 @@ export default function MemoryAlbum() {
                   {diff.options || '?'}
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 text-lg">{diff.level}</h3>
-                  <p className="text-sm text-gray-400">{diff.label}</p>
+                  <h3 className="font-bold text-gray-900 text-lg">{t(`games.memoryAlbum.${diff.key}`)}</h3>
+                  <p className="text-sm text-gray-400">{t(`games.memoryAlbum.${diff.key}Label`)}</p>
                 </div>
               </motion.button>
             ))}
@@ -137,8 +139,8 @@ export default function MemoryAlbum() {
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-500/25">
               <Trophy size={40} className="text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Well Done!</h2>
-            <p className="text-gray-500 mb-6">You've completed the Memory Album game</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('games.memoryAlbum.wellDone')}</h2>
+            <p className="text-gray-500 mb-6">{t('games.memoryAlbum.completedMsg')}</p>
 
             <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-primary-50 to-teal-50 border border-primary-100 mb-8">
               <Star size={24} className="text-amber-400 fill-amber-400" />
@@ -154,7 +156,7 @@ export default function MemoryAlbum() {
                 className="flex-1 py-3 rounded-xl bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold shadow-lg shadow-primary-500/25"
               >
                 <RotateCcw size={18} className="inline mr-2" />
-                Play Again
+                {t('common.playAgain')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -162,7 +164,7 @@ export default function MemoryAlbum() {
                 onClick={() => { completeGame(1, score); navigate('/games') }}
                 className="flex-1 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-semibold"
               >
-                Back to Games
+                {t('common.backToGames')}
               </motion.button>
             </div>
           </motion.div>
@@ -225,8 +227,8 @@ export default function MemoryAlbum() {
               {question.emoji}
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Who is this?</h2>
-            <p className="text-gray-400 mb-8">Tap the correct name</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.memoryAlbum.whoIs')}</h2>
+            <p className="text-gray-400 mb-8">{t('games.memoryAlbum.tapCorrect')}</p>
 
             {/* Options (Easy/Medium) */}
             {difficulty.options > 0 && (

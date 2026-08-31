@@ -1,9 +1,12 @@
 import { motion } from 'framer-motion'
-import { Brain, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useLanguage } from '../../i18n/LanguageContext'
+import BrahmiLogo from '../ui/BrahmiLogo'
 
 export default function Navbar({ showBack = false, transparent = false }) {
   const navigate = useNavigate()
+  const { t } = useLanguage()
 
   return (
     <motion.nav
@@ -28,11 +31,9 @@ export default function Navbar({ showBack = false, transparent = false }) {
               </motion.button>
             )}
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center shadow-lg shadow-primary-500/20">
-                <Brain size={20} className="text-white" />
-              </div>
+              <BrahmiLogo size={36} />
               <span className="text-lg font-bold text-gray-900">
-                Cogni<span className="gradient-text">Care</span>
+                {t('common.appName')}
               </span>
             </div>
           </div>

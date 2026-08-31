@@ -5,6 +5,7 @@ import {
   Droplets, Moon, Bell, Coffee, Sun, Activity
 } from 'lucide-react'
 import { useData } from '../../../context/DataContext'
+import { useLanguage } from '../../../i18n/LanguageContext'
 import Input from '../../../components/ui/Input'
 import Card from '../../../components/ui/Card'
 
@@ -30,6 +31,7 @@ const typeColors = {
 
 export default function DailyScheduleStep() {
   const { schedule, addReminder, removeReminder } = useData()
+  const { t } = useLanguage()
   const [showForm, setShowForm] = useState(false)
   const [newReminder, setNewReminder] = useState({
     title: '',
@@ -55,8 +57,8 @@ export default function DailyScheduleStep() {
               <Clock size={24} className="text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Daily Schedule</h2>
-              <p className="text-gray-500 text-sm">Set up gentle reminders for the patient.</p>
+              <h2 className="text-2xl font-bold text-gray-900">{t('setup.schedule.title')}</h2>
+              <p className="text-gray-500 text-sm">{t('setup.schedule.desc')}</p>
             </div>
           </div>
           <motion.button
@@ -66,7 +68,7 @@ export default function DailyScheduleStep() {
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-50 text-primary-600 font-medium text-sm hover:bg-primary-100 transition-colors"
           >
             <Plus size={16} />
-            Add
+            {t('common.add')}
           </motion.button>
         </div>
 
@@ -82,23 +84,22 @@ export default function DailyScheduleStep() {
               <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
-                    label="Title"
-                    placeholder="e.g., Morning Medicine"
+                    label={t('setup.schedule.title_label')}
+                    placeholder={t('setup.schedule.titlePlaceholder')}
                     value={newReminder.title}
                     onChange={(e) => setNewReminder(prev => ({ ...prev, title: e.target.value }))}
                     required
                   />
                   <Input
-                    label="Time"
+                    label={t('setup.schedule.time')}
                     type="time"
                     value={newReminder.time}
                     onChange={(e) => setNewReminder(prev => ({ ...prev, time: e.target.value }))}
                     required
                   />
                 </div>
-                <Input
-                  label="Notes (optional)"
-                  placeholder="Any special instructions..."
+                <Input                    label={t('setup.schedule.notes')}
+                    placeholder={t('setup.schedule.notesPlaceholder')}
                   value={newReminder.notes}
                   onChange={(e) => setNewReminder(prev => ({ ...prev, notes: e.target.value }))}
                 />
@@ -107,13 +108,13 @@ export default function DailyScheduleStep() {
                     onClick={handleAdd}
                     className="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors"
                   >
-                    Add Reminder
+                    {t('setup.schedule.addReminder')}
                   </button>
                   <button
                     onClick={() => setShowForm(false)}
                     className="px-4 py-2 rounded-lg bg-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-300 transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 </div>
               </div>

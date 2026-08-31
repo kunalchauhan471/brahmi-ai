@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Trophy, RotateCcw, Heart, Star } from 'lucide-react'
+import { useLanguage } from '../../../i18n/LanguageContext'
 
 const allPairs = [
   { id: 1, emoji: '👨', label: 'Father' },
@@ -25,6 +26,7 @@ function shuffle(arr) {
 
 export default function LocalCultureMatch() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [gameState, setGameState] = useState('setup')
   const [cards, setCards] = useState([])
   const [flipped, setFlipped] = useState([])
@@ -102,7 +104,7 @@ export default function LocalCultureMatch() {
             >
               <ArrowLeft size={20} className="text-gray-600" />
             </motion.button>
-            <h1 className="text-lg font-bold text-gray-900">Pair Matcher</h1>
+            <h1 className="text-lg font-bold text-gray-900">{t('games.pairMatcher.name')}</h1>
           </div>
         </div>
         <div className="max-w-lg mx-auto px-4 py-12 text-center">
@@ -110,16 +112,13 @@ export default function LocalCultureMatch() {
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-cyan-500/25">
               <Heart size={36} className="text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Pair Matcher</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.pairMatcher.name')}</h2>
             <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              Flip the cards and find matching pairs! Remember where each card is to match them all.
+              {t('games.pairMatcher.instructions')}
             </p>
             <div className="flex justify-center gap-4 mb-8">
               <div className="px-4 py-2 rounded-xl bg-cyan-50 text-cyan-600 text-sm font-medium">
-                6 pairs to find
-              </div>
-              <div className="px-4 py-2 rounded-xl bg-primary-50 text-primary-600 text-sm font-medium">
-                Fewest moves wins
+                6 {t('games.pairMatcher.pairs', { count: '', total: '' }).split('/')[0] || 'pairs to find'}
               </div>
             </div>
             <motion.button
@@ -128,7 +127,7 @@ export default function LocalCultureMatch() {
               onClick={startGame}
               className="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold text-lg shadow-xl shadow-cyan-500/25"
             >
-              Start Game
+              {t('common.startGame')}
             </motion.button>
           </motion.div>
         </div>
@@ -144,23 +143,23 @@ export default function LocalCultureMatch() {
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-amber-500/25">
               <Trophy size={40} className="text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">All Pairs Found!</h2>
-            <p className="text-gray-500 mb-2">Great memory and matching skills!</p>
-            <p className="text-sm text-gray-400 mb-6">Completed in {moves} moves</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('games.pairMatcher.matchedAll')}</h2>
+            <p className="text-gray-500 mb-2">{t('games.pairMatcher.greatJob')}</p>
+            <p className="text-sm text-gray-400 mb-6">{t('games.pairMatcher.moves', { count: moves })}</p>
             <div className="flex justify-center gap-6 mb-8">
               <div className="text-center">
                 <div className="text-2xl font-bold gradient-text">{score}</div>
-                <div className="text-xs text-gray-400">Points</div>
+                <div className="text-xs text-gray-400">{t('common.points')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold gradient-text">{moves}</div>
-                <div className="text-xs text-gray-400">Moves</div>
+                <div className="text-xs text-gray-400">{t('games.pairMatcher.moves', { count: '' }).split(':')[0] || 'Moves'}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold gradient-text">
                   {moves <= 12 ? '⭐⭐⭐' : moves <= 18 ? '⭐⭐' : '⭐'}
                 </div>
-                <div className="text-xs text-gray-400">Rating</div>
+                <div className="text-xs text-gray-400">⭐</div>
               </div>
             </div>
             <div className="flex gap-4">
@@ -171,7 +170,7 @@ export default function LocalCultureMatch() {
                 className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold"
               >
                 <RotateCcw size={16} className="inline mr-2" />
-                Play Again
+                {t('common.playAgain')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -179,7 +178,7 @@ export default function LocalCultureMatch() {
                 onClick={() => navigate('/games')}
                 className="flex-1 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 font-semibold"
               >
-                Back to Games
+                {t('common.backToGames')}
               </motion.button>
             </div>
           </motion.div>
@@ -202,7 +201,7 @@ export default function LocalCultureMatch() {
               >
                 <ArrowLeft size={20} className="text-gray-600" />
               </motion.button>
-              <h1 className="text-lg font-bold text-gray-900">Pair Matcher</h1>
+              <h1 className="text-lg font-bold text-gray-900">{t('games.pairMatcher.name')}</h1>
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-400">{matched.length}/6 pairs</span>
