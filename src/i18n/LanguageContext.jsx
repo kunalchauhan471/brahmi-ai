@@ -66,14 +66,23 @@ export function LanguageProvider({ children, location }) {
   // Always use English
   const language = 'en'
 
-  const t = useCallback((key, fallback) => {
+  const t = useCallback((key, params) => {
     const langData = translations[language] || translations.en
-    const value = getNestedValue(langData, key)
-    if (value !== undefined) return value
-    // Fallback to English
-    const enValue = getNestedValue(translations.en, key)
-    if (enValue !== undefined) return enValue
-    return fallback || key
+    let value = getNestedValue(langData, key)
+    if (value === undefined) {
+      // Fallback to English
+      value = getNestedValue(translations.en, key)
+    }
+    if (value === undefined) return params && typeof params === 'string' ? params : key
+    // Interpolate {param} placeholders if params object is provided
+    if (params && typeof params === 'object') {
+      let result = value
+      Object.entries(params).forEach(([k, v]) => {
+        result = result.replace(new RegExp(`\{${k}\}`, 'g'), v)
+      })
+      return result
+    }
+    return value
   }, [language])
 
   useEffect(() => {
