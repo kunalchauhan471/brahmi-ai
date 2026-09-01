@@ -11,6 +11,23 @@ import { useLanguage } from '../../i18n/LanguageContext'
 import { useSmartwatch } from '../../context/SmartwatchContext'
 import Card from '../../components/ui/Card'
 import BrahmiLogo from '../../components/ui/BrahmiLogo'
+import CaregiverEmergencyPanel from '../../components/emergency/CaregiverEmergencyPanel'
+import EmergencyHistory from '../../components/emergency/EmergencyHistory'
+import { Component } from 'react'
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  render() {
+    if (this.state.hasError) return null
+    return this.props.children
+  }
+}
 
 const typeIcons = {
   medicine: Pill,
@@ -159,6 +176,11 @@ export default function CaregiverDashboard() {
               </div>
             </Card>
           </motion.div>
+
+          {/* Emergency Panel */}
+          <ErrorBoundary>
+            <CaregiverEmergencyPanel />
+          </ErrorBoundary>
 
           {/* Today's Schedule */}
           <motion.div
@@ -461,6 +483,15 @@ export default function CaregiverDashboard() {
               ))}
             </div>
           </Card>
+        </motion.div>
+
+        {/* Emergency History */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <EmergencyHistory />
         </motion.div>
       </div>
     </div>

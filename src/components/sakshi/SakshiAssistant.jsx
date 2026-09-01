@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
-  MessageCircle, X, Mic, Send, Phone, Volume2, VolumeX,
+  MessageCircle, X, Mic, Send, MessageSquare, Volume2, VolumeX,
   Brain, AlertTriangle, Gamepad2, Heart
 } from 'lucide-react'
 import { useData } from '../../context/DataContext'
@@ -103,9 +103,8 @@ function getMoodResponses(t) {
 
 export default function SakshiAssistant({ triggerReminder }) {
   const navigate = useNavigate()
-  const { patientData, schedule, memories } = useData()
+  const { patientData, schedule, memories, emergencyContact } = useData()
   const { healthData, connected: watchConnected, emergencyActive, setEmergencyActive, getHeartRateStatus } = useSmartwatch()
-  const emergencyContact = useData.getState?.()?.emergencyContact
   const patientName = patientData.name || 'Patient'
   const { t, language } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
@@ -548,9 +547,8 @@ export default function SakshiAssistant({ triggerReminder }) {
 
     // ── 7. EMERGENCY CONTACT ──
     if (lower.match(/\b(emergency contact|emergency number|who to call|help number|sos number|ambulance)\b/)) {
-      const ec = useData.getState?.()?.emergencyContact
-      if (ec && ec.name) {
-        addBotMessage(`Your emergency contact is:\n\n📞 **${ec.name}** (${ec.relationship || 'Emergency Contact'})\n📱 ${ec.phone || 'No number on file'}\n\nIn a real emergency, you can also dial **112** 🆘`)
+      if (emergencyContact && emergencyContact.name) {
+        addBotMessage(`Your emergency contact is:\n\n📞 **${emergencyContact.name}** (${emergencyContact.relationship || 'Emergency Contact'})\n📱 ${emergencyContact.phone || 'No number on file'}\n\nIn a real emergency, you can also dial **112** 🆘`)
       } else {
         addBotMessage(`I don't have an emergency contact on file. In a real emergency, please dial **112** 🆘\n\nAsk your caregiver to set up your emergency contact.`)
       }
@@ -925,7 +923,7 @@ export default function SakshiAssistant({ triggerReminder }) {
                 }}
                 className="w-full py-2.5 rounded-xl bg-red-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
               >
-                <Phone size={14} />
+                <MessageSquare size={14} />
                 {t('sakshi.emergencyCall')}
               </motion.button>
             </div>

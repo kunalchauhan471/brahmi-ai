@@ -2,6 +2,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { DataProvider } from './context/DataContext'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { SmartwatchProvider } from './context/SmartwatchContext'
+import { EmergencyProvider } from './context/EmergencyContext'
 import LandingPage from './pages/LandingPage'
 import PaymentPage from './pages/PaymentPage'
 import SetupPage from './pages/caregiver/SetupPage'
@@ -21,6 +22,7 @@ function AppRoutes() {
     <LanguageProvider location={location.pathname}>
     <DataProvider>
     <SmartwatchProvider>
+    <EmergencyProvider>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/payment" element={<PaymentPage />} />
@@ -35,6 +37,7 @@ function AppRoutes() {
         <Route path="/games/5" element={<WhatChanged />} />
         <Route path="/games/6" element={<LocalCultureMatch />} />
       </Routes>
+    </EmergencyProvider>
     </SmartwatchProvider>
     </DataProvider>
     </LanguageProvider>

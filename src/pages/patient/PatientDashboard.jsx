@@ -18,7 +18,7 @@ import SmartwatchPanel from '../../components/smartwatch/SmartwatchPanel'
 import useScheduleReminder from '../../hooks/useScheduleReminder'
 import { getISTHour } from '../../utils/timezone'
 import BrahmiLogo from '../../components/ui/BrahmiLogo'
-import { sendEmergencySMS, isValidPhone } from '../../utils/emergencyService'
+import EmergencyButton from '../../components/emergency/EmergencyButton'
 
 const typeIcons = {
   medicine: Pill,
@@ -49,7 +49,7 @@ const gameCardConfigs = [
 
 export default function PatientDashboard() {
   const navigate = useNavigate()
-  const { patientData, schedule, memories, completedGames, emergencyContact } = useData()
+  const { patientData, schedule, memories, completedGames, emergencyContact, hasCompletedSetup } = useData()
   const { t } = useLanguage()
   const [reminderMessage, setReminderMessage] = useState(null)
 
@@ -63,6 +63,40 @@ export default function PatientDashboard() {
   const greeting = getGreeting(t)
   const completedCount = Object.keys(completedGames).length
   const totalMemories = memories.length
+
+  // If no setup was completed, show a friendly prompt
+  if (!hasCompletedSetup) {
+    return (
+      <div className="min-h-screen bg-mesh flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-xl"
+        >
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center mx-auto mb-6">
+            <Brain size={36} className="text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Brahmi AI</h2>
+          <p className="text-gray-500 mb-6">
+            It looks like the caregiver hasn't set up your profile yet.
+            Please ask your caregiver to complete the setup first.
+          </p>
+          <button
+            onClick={() => navigate('/setup')}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold shadow-lg shadow-primary-500/25 hover:shadow-xl transition-shadow"
+          >
+            Start Setup
+          </button>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full py-3 mt-3 rounded-xl text-gray-500 font-medium hover:bg-gray-100 transition-colors"
+          >
+            Go to Home
+          </button>
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-mesh pb-24">
@@ -260,10 +294,7 @@ export default function PatientDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <EmergencyButton
-            patientName={patientData.name}
-            emergencyContact={emergencyContact}
-          />
+          <EmergencyButton />
         </motion.div>
       </div>
 
@@ -279,132 +310,7 @@ export default function PatientDashboard() {
   )
 }
 
-function EmergencyButton({ patientName, emergencyContact }) {
-  const { t } = useLanguage()
-  const [sending, setSending] = useState(false)
-  const [sent, setSent] = useState(false)
-  const [result, setResult] = useState(null)
-  const [copied, setCopied] = useState(false)
 
-  const handleEmergency = async () => {
-    if (sending || sent) return
-    setSending(true)
-    setResult(null)
-
-    try {
-      const phone = emergencyContact?.phone
-      if (!phone || !isValidPhone(phone)) {
-        setResult({
-          success: false,
-          message: 'No emergency phone number set. Please ask your caregiver to add one in settings.',
-        })
-        setSending(false)
-        return
-      }
-
-      const smsResult = await sendEmergencySMS(
-        phone,
-        patientName || 'Patient',
-        'Patient pressed the emergency button — they need immediate help. Please come right away!'
-      )
-
-      setResult(smsResult)
-      if (smsResult.success) {
-        setSent(true)
-        setTimeout(() => setSent(false), 15000)
-      }
-    } catch (err) {
-      setResult({ success: false, message: 'Could not send SMS. Please try again.' })
-    } finally {
-      setSending(false)
-    }
-  }
-
-  const handleCopyMessage = () => {
-    if (result?.manualMessage) {
-      navigator.clipboard.writeText(result.manualMessage).then(() => {
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      })
-    }
-  }
-
-  return (
-    <div className="space-y-3">
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={handleEmergency}
-        disabled={sending}
-        className="w-full p-6 rounded-2xl bg-gradient-to-r from-red-500 to-red-600 text-white shadow-xl shadow-red-500/25 flex items-center justify-center gap-4 disabled:opacity-70"
-      >
-        <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-          {sending ? (
-            <div className="w-7 h-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : sent ? (
-            <CheckCircle size={28} />
-          ) : (
-            <MessageSquare size={28} />
-          )}
-        </div>
-        <div className="text-left">
-          <div className="text-xl font-bold">
-            {sending ? 'Sending Emergency SMS...' : sent ? '✅ SMS Sent Successfully!' : '🚨 Emergency SMS'}
-          </div>
-          <div className="text-red-100 text-sm">
-            {sent
-              ? `Alert sent to ${emergencyContact?.name || 'your caregiver'} via SMS`
-              : sending
-                ? 'Sending emergency SMS...'
-                : 'Tap to send emergency SMS to your contact'}
-          </div>
-        </div>
-      </motion.button>
-
-      {/* SMS Result Feedback */}
-      <AnimatePresence>
-        {result && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            className={`rounded-xl p-4 text-sm flex items-start gap-3 ${
-              result.success
-                ? 'bg-green-50 border border-green-200 text-green-800'
-                : 'bg-amber-50 border border-amber-200 text-amber-800'
-            }`}
-          >
-            {result.success ? (
-              <CheckCircle size={18} className="text-green-600 mt-0.5 flex-shrink-0" />
-            ) : (
-              <AlertTriangle size={18} className="text-amber-600 mt-0.5 flex-shrink-0" />
-            )}
-            <div className="flex-1">
-              <div className="font-medium">{result.message}</div>
-              {result.method === 'manual' && (
-                <div className="mt-2">
-                  <p className="text-xs opacity-80 mb-2">Please send this message to {result.phone}:</p>
-                  <div className="bg-white rounded-lg p-2 text-xs font-mono border border-amber-200 mb-2 whitespace-pre-wrap">{result.manualMessage}</div>
-                  <button
-                    onClick={handleCopyMessage}
-                    className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 transition-colors"
-                  >
-                    {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy Message</>}
-                  </button>
-                </div>
-              )}
-              {result.quotaRemaining !== undefined && (
-                <div className="text-xs mt-1 opacity-60">
-                  SMS quota remaining today: {result.quotaRemaining}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
 
 function getGreeting(t) {
   const hour = getISTHour()

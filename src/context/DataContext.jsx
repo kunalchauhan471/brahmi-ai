@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 
 const DataContext = createContext()
 
@@ -10,13 +10,15 @@ export const useData = () => {
   return context
 }
 
-const initialCaregiverData = {
+const STORAGE_KEY = 'brahmi_data'
+
+const defaultCaregiverData = {
   name: '',
   email: '',
   phone: '',
 }
 
-const initialPatientData = {
+const defaultPatientData = {
   name: '',
   age: '',
   gender: '',
@@ -25,13 +27,13 @@ const initialPatientData = {
   speechSpeed: 'normal',
 }
 
-const initialEmergencyContact = {
+const defaultEmergencyContact = {
   name: '',
   relationship: '',
   phone: '',
 }
 
-const initialSchedule = [
+const defaultSchedule = [
   { id: 1, title: 'Morning Medicine', time: '08:00 AM', notes: 'Take with warm water', type: 'medicine' },
   { id: 2, title: 'Breakfast', time: '08:30 AM', notes: 'Oats or porridge preferred', type: 'meal' },
   { id: 3, title: 'Morning Walk', time: '09:30 AM', notes: '15 minutes in the garden', type: 'activity' },
@@ -44,7 +46,7 @@ const initialSchedule = [
   { id: 10, title: 'Sleep Time', time: '10:00 PM', notes: 'Ensure room is dark and quiet', type: 'routine' },
 ]
 
-const initialMemories = [
+const defaultMemories = [
   {
     id: 1,
     name: 'Amit',
@@ -96,77 +98,59 @@ const initialMemories = [
 ]
 
 const gamesData = [
-  {
-    id: 1,
-    name: 'My Memory Album',
-    description: 'Look at family photos and identify who they are. Test your memory of loved ones.',
-    icon: 'Album',
-    difficulty: 'Easy',
-    color: 'from-blue-500 to-indigo-600',
-    bgColor: 'bg-blue-50',
-    progress: 0,
-  },
-  {
-    id: 2,
-    name: 'Memory Tray',
-    description: 'Remember the objects shown and pick them from the tray. Sharpens visual memory.',
-    icon: 'LayoutGrid',
-    difficulty: 'Medium',
-    color: 'from-emerald-500 to-teal-600',
-    bgColor: 'bg-emerald-50',
-    progress: 0,
-  },
-  {
-    id: 3,
-    name: 'Family Face Match',
-    description: 'Match family members with their names. Great for strengthening face recognition.',
-    icon: 'Users',
-    difficulty: 'Easy',
-    color: 'from-rose-500 to-pink-600',
-    bgColor: 'bg-rose-50',
-    progress: 0,
-  },
-  {
-    id: 4,
-    name: 'Daily Routine Sequencer',
-    description: 'Put your daily activities in the correct order. Helps with routine memory.',
-    icon: 'ListOrdered',
-    difficulty: 'Medium',
-    color: 'from-amber-500 to-orange-600',
-    bgColor: 'bg-amber-50',
-    progress: 0,
-  },
-  {
-    id: 5,
-    name: 'Spot the Difference',
-    description: 'Compare two scenes side by side and find what\'s missing. Sharpens attention.',
-    icon: 'Eye',
-    difficulty: 'Medium',
-    color: 'from-violet-500 to-purple-600',
-    bgColor: 'bg-violet-50',
-    progress: 0,
-  },
-  {
-    id: 6,
-    name: 'Pair Matcher',
-    description: 'Flip cards and find matching pairs. A classic memory matching game.',
-    icon: 'Heart',
-    difficulty: 'Easy',
-    color: 'from-cyan-500 to-blue-600',
-    bgColor: 'bg-cyan-50',
-    progress: 0,
-  },
+  { id: 1, name: 'My Memory Album', description: 'Look at family photos and identify who they are. Test your memory of loved ones.', icon: 'Album', difficulty: 'Easy', color: 'from-blue-500 to-indigo-600', bgColor: 'bg-blue-50', progress: 0 },
+  { id: 2, name: 'Memory Tray', description: 'Remember the objects shown and pick them from the tray. Sharpens visual memory.', icon: 'LayoutGrid', difficulty: 'Medium', color: 'from-emerald-500 to-teal-600', bgColor: 'bg-emerald-50', progress: 0 },
+  { id: 3, name: 'Family Face Match', description: 'Match family members with their names. Great for strengthening face recognition.', icon: 'Users', difficulty: 'Easy', color: 'from-rose-500 to-pink-600', bgColor: 'bg-rose-50', progress: 0 },
+  { id: 4, name: 'Daily Routine Sequencer', description: 'Put your daily activities in the correct order. Helps with routine memory.', icon: 'ListOrdered', difficulty: 'Medium', color: 'from-amber-500 to-orange-600', bgColor: 'bg-amber-50', progress: 0 },
+  { id: 5, name: 'Spot the Difference', description: "Compare two scenes side by side and find what's missing. Sharpens attention.", icon: 'Eye', difficulty: 'Medium', color: 'from-violet-500 to-purple-600', bgColor: 'bg-violet-50', progress: 0 },
+  { id: 6, name: 'Pair Matcher', description: 'Flip cards and find matching pairs. A classic memory matching game.', icon: 'Heart', difficulty: 'Easy', color: 'from-cyan-500 to-blue-600', bgColor: 'bg-cyan-50', progress: 0 },
 ]
 
+/** Load persisted data from localStorage, falling back to defaults */
+function loadPersistedData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+/** Save data to localStorage */
+function persistData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  } catch {
+    // Silently fail if localStorage is full or unavailable
+  }
+}
+
 export function DataProvider({ children }) {
-  const [caregiverData, setCaregiverData] = useState(initialCaregiverData)
-  const [patientData, setPatientData] = useState(initialPatientData)
-  const [emergencyContact, setEmergencyContact] = useState(initialEmergencyContact)
-  const [schedule, setSchedule] = useState(initialSchedule)
-  const [memories, setMemories] = useState(initialMemories)
+  const persisted = loadPersistedData()
+
+  const [caregiverData, setCaregiverData] = useState(persisted?.caregiverData || defaultCaregiverData)
+  const [patientData, setPatientData] = useState(persisted?.patientData || defaultPatientData)
+  const [emergencyContact, setEmergencyContact] = useState(persisted?.emergencyContact || defaultEmergencyContact)
+  const [schedule, setSchedule] = useState(persisted?.schedule || defaultSchedule)
+  const [memories, setMemories] = useState(persisted?.memories || defaultMemories)
   const [games, setGames] = useState(gamesData)
-  const [completedGames, setCompletedGames] = useState({})
-  const [patientMode, setPatientMode] = useState(false)
+  const [completedGames, setCompletedGames] = useState(persisted?.completedGames || {})
+  const [patientMode, setPatientMode] = useState(persisted?.patientMode || false)
+
+  // Persist critical data to localStorage whenever it changes
+  useEffect(() => {
+    persistData({
+      caregiverData,
+      patientData,
+      emergencyContact,
+      schedule,
+      memories,
+      completedGames,
+      patientMode,
+    })
+  }, [caregiverData, patientData, emergencyContact, schedule, memories, completedGames, patientMode])
 
   const addMemory = (memory) => {
     setMemories(prev => [...prev, { ...memory, id: Date.now() }])
@@ -201,6 +185,17 @@ export function DataProvider({ children }) {
     ))
   }
 
+  // Check if the caregiver has completed at least the basic setup
+  const hasCompletedSetup = !!(
+    (patientData.name && patientData.name.trim()) ||
+    (emergencyContact.phone && emergencyContact.phone.trim()) ||
+    (caregiverData.name && caregiverData.name.trim())
+  )
+
+  const hasEmergencyContact = !!(
+    emergencyContact.phone && emergencyContact.phone.trim()
+  )
+
   const value = {
     caregiverData,
     setCaregiverData,
@@ -222,6 +217,8 @@ export function DataProvider({ children }) {
     updateGameProgress,
     patientMode,
     setPatientMode,
+    hasCompletedSetup,
+    hasEmergencyContact,
   }
 
   return (

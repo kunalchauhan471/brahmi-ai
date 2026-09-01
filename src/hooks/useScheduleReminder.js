@@ -3,6 +3,7 @@ import { getISTTotalMinutes, parseTimeToMinutes } from '../utils/timezone'
 
 export default function useScheduleReminder(schedule, onReminder) {
   const [firedReminders, setFiredReminders] = useState(new Set())
+  const hasCompletedFirstCycle = useRef(false)
 
   useEffect(() => {
     if (!schedule || schedule.length === 0) return
@@ -25,11 +26,26 @@ export default function useScheduleReminder(schedule, onReminder) {
       })
     }
 
-    // Check immediately, then every 20 seconds
-    checkSchedule()
-    const interval = setInterval(checkSchedule, 20000)
+    // First cycle: mark as done but DON'T fire any reminders
+    // This prevents Sakshi from auto-opening when the page loads
+    const initTimeout = setTimeout(() => {
+      hasCompletedFirstCycle.current = true
 
-    return () => clearInterval(interval)
+      // Now start periodic checking (every 20 seconds)
+      const interval = setInterval(() => {
+        if (hasCompletedFirstCycle.current) {
+          checkSchedule()
+        }
+      }, 20000)
+
+      // Store interval for cleanup
+      initTimeout._interval = interval
+    }, 25000)
+
+    return () => {
+      clearTimeout(initTimeout)
+      if (initTimeout._interval) clearInterval(initTimeout._interval)
+    }
   }, [schedule, firedReminders, onReminder])
 
   return { firedReminders }
