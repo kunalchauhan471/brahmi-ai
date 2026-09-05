@@ -225,20 +225,34 @@ export default function LandingPage() {
             {steps.map((step, i) => (
               <motion.div
                 key={i}
-                className="relative p-8 rounded-2xl bg-white border border-gray-100 shadow-card hover:shadow-card-hover transition-all"
+                className="relative overflow-hidden p-8 rounded-2xl bg-white border border-gray-100 shadow-card hover:shadow-card-hover gradient-ring transition-all group"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
+                whileHover={{ y: -4 }}
               >
-                <div className="text-5xl font-bold gradient-text opacity-20 mb-4">{step.num}</div>
+                {/* Top accent line on hover */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 via-teal-400 to-primary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* Number chip — fully visible with glow */}
+                <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-50 to-teal-50 border border-primary-100 mb-6 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-primary-500/10 transition-all duration-300">
+                  <span className="text-3xl font-extrabold gradient-text tracking-tight">{step.num}</span>
+                </div>
+
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
                 <p className="text-gray-500 leading-relaxed">{step.desc}</p>
-                {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-1/2 -right-4 text-gray-300">
-                    <ChevronRight size={24} />
-                  </div>
-                )}
+
+                {/* Animated progress dots for the next steps */}
+                <div className="flex items-center gap-1 mt-6">
+                  {[0, 1, 2].map(dot => (
+                    <motion.span
+                      key={dot}
+                      className={`w-1.5 h-1.5 rounded-full ${dot === i ? 'bg-primary-500' : 'bg-gray-200'} group-hover:bg-primary-300 transition-colors`}
+                    />
+                  ))}
+                  <span className="ml-2 h-px flex-1 bg-gradient-to-r from-primary-200 to-transparent" />
+                </div>
               </motion.div>
             ))}
           </div>

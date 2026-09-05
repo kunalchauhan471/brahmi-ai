@@ -40,21 +40,62 @@ body {
 }
 
 @layer utilities {
-  /* Mesh background */
+  /* ===== Ambient animated mesh background =====
+     Keeps the light blue/teal identity but adds soft drifting
+     gradient orbs + a faint grid so pages feel alive.
+     isolation creates a stacking context so the orbs (z-index -1)
+     stay behind content without breaking fixed/sticky navbars. */
   .bg-mesh {
+    isolation: isolate;
     background-color: #f8fafc;
     background-image:
-      radial-gradient(at 20% 20%, rgba(14, 165, 233, 0.04) 0px, transparent 50%),
-      radial-gradient(at 80% 80%, rgba(20, 184, 166, 0.04) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, rgba(241, 245, 249, 0.8) 0px, transparent 50%);
+      radial-gradient(at 20% 20%, rgba(14, 165, 233, 0.05) 0px, transparent 50%),
+      radial-gradient(at 80% 80%, rgba(20, 184, 166, 0.05) 0px, transparent 50%),
+      radial-gradient(at 50% 50%, rgba(241, 245, 249, 0.9) 0px, transparent 50%);
   }
 
-  /* Glass morphism */
+  .bg-mesh::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background:
+      radial-gradient(420px circle at 12% 18%, rgba(14, 165, 233, 0.10), transparent 65%),
+      radial-gradient(360px circle at 88% 8%, rgba(20, 184, 166, 0.09), transparent 65%),
+      radial-gradient(460px circle at 82% 85%, rgba(14, 165, 233, 0.07), transparent 65%),
+      radial-gradient(380px circle at 15% 88%, rgba(20, 184, 166, 0.07), transparent 65%);
+    animation: aurora-drift 18s ease-in-out infinite alternate;
+  }
+
+  .bg-mesh::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background-image:
+      radial-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 40%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 40%, transparent 100%);
+  }
+
+  /* Glass morphism (elevated) */
   .glass {
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.78);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 32px rgba(2, 132, 199, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 40px rgba(2, 132, 199, 0.10), 0 1px 3px rgba(15, 23, 42, 0.06);
   }
 
   /* Gradient text */
@@ -65,20 +106,74 @@ body {
     background-clip: text;
   }
 
+  /* Gradient border ring (hover / emphasis) */
+  .gradient-ring {
+    position: relative;
+  }
+  .gradient-ring::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.5), rgba(20, 184, 166, 0.4), transparent 70%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .gradient-ring:hover::before {
+    opacity: 1;
+  }
+
+  /* Soft premium glow behind primary elements */
+  .glow-primary {
+    box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.08), 0 8px 30px -6px rgba(14, 165, 233, 0.25);
+  }
+
   /* Card shadows */
   .shadow-card {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
   }
 
   .shadow-card-hover {
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06), 0 4px 10px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 12px 30px rgba(2, 132, 199, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Shimmer sweep for CTA buttons */
+  .btn-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-sheen::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 40%;
+    height: 200%;
+    transform: rotate(25deg);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transition: left 0.6s ease;
+  }
+  .btn-sheen:hover::after {
+    left: 120%;
   }
 }
 
 /* Custom keyframes */
+@keyframes aurora-drift {
+  0% { opacity: 0.75; transform: translate3d(-1.5%, -1%, 0) scale(1); }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; transform: translate3d(1.5%, 1.2%, 0) scale(1.04); }
+}
+
 @keyframes pulse-ring {
-  0% { transform: scale(0.9); opacity: 1; }
-  100% { transform: scale(1.5); opacity: 0; }
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
 }
 
 @keyframes heartbeat {
@@ -105,6 +200,14 @@ body {
 
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
 }
 
 /* Leaflet map fix */
