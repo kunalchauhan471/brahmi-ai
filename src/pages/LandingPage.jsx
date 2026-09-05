@@ -56,7 +56,7 @@ const stats = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-mesh overflow-hidden">
+    <div className="homepage min-h-screen bg-mesh overflow-hidden">
       {/* Navigation */}
       <motion.nav
         className="fixed top-0 left-0 right-0 z-50 glass shadow-sm"
@@ -121,6 +121,23 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-16">
+        {/* Soft floating decorative orbs (homepage only) */}
+        <motion.div
+          className="pointer-events-none absolute top-24 left-[8%] w-28 h-28 rounded-full bg-gradient-to-br from-primary-300/30 to-teal-300/20 blur-2xl"
+          animate={{ y: [0, -18, 0], scale: [1, 1.08, 1] }}
+          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="pointer-events-none absolute bottom-32 right-[10%] w-36 h-36 rounded-full bg-gradient-to-br from-teal-300/25 to-primary-300/20 blur-2xl"
+          animate={{ y: [0, 16, 0], scale: [1, 1.05, 1] }}
+          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+        />
+        <motion.div
+          className="pointer-events-none absolute top-1/2 left-1/3 w-20 h-20 rounded-full bg-primary-200/20 blur-xl"
+          animate={{ y: [0, -12, 0] }}
+          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+        />
+
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -141,7 +158,7 @@ export default function LandingPage() {
           >
             Helping Dementia Patients
             <br />
-            <span className="gradient-text">Stay Connected</span>
+            <span className="gradient-text-flow">Stay Connected</span>
             <br />
             with Their Memories
           </motion.h1>
@@ -217,7 +234,7 @@ export default function LandingPage() {
           >
             <span className="text-primary-600 text-sm font-medium tracking-wider uppercase">How It Works</span>
             <h2 className="mt-4 text-3xl md:text-5xl font-bold text-gray-900">
-              Simple Setup, <span className="gradient-text">Daily Impact</span>
+              Simple Setup, <span className="gradient-text-flow">Daily Impact</span>
             </h2>
           </motion.div>
 
@@ -270,7 +287,7 @@ export default function LandingPage() {
           >
             <span className="text-primary-600 text-sm font-medium tracking-wider uppercase">Features</span>
             <h2 className="mt-4 text-3xl md:text-5xl font-bold text-gray-900">
-              Everything Your Patient <span className="gradient-text">Needs</span>
+              Everything Your Patient <span className="gradient-text-flow">Needs</span>
             </h2>
           </motion.div>
 

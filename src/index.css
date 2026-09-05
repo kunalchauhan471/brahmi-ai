@@ -65,6 +65,10 @@ body {
       radial-gradient(360px circle at 88% 8%, rgba(20, 184, 166, 0.09), transparent 65%),
       radial-gradient(460px circle at 82% 85%, rgba(14, 165, 233, 0.07), transparent 65%),
       radial-gradient(380px circle at 15% 88%, rgba(20, 184, 166, 0.07), transparent 65%);
+  }
+
+  /* Ambient orbs only drift on the homepage — every other page stays calm */
+  .homepage.bg-mesh::before {
     animation: aurora-drift 18s ease-in-out infinite alternate;
   }
 
@@ -104,6 +108,16 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Slowly shifting gradient text — homepage hero headings only */
+  .gradient-text-flow {
+    background: linear-gradient(120deg, #0ea5e9 0%, #14b8a6 30%, #38bdf8 55%, #2dd4bf 80%, #0ea5e9 100%);
+    background-size: 250% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-flow 7s linear infinite;
   }
 
   /* Gradient border ring (hover / emphasis) */
@@ -165,6 +179,11 @@ body {
 }
 
 /* Custom keyframes */
+@keyframes gradient-flow {
+  0% { background-position: 0% center; }
+  100% { background-position: -250% center; }
+}
+
 @keyframes aurora-drift {
   0% { opacity: 0.75; transform: translate3d(-1.5%, -1%, 0) scale(1); }
   50% { opacity: 1; }
