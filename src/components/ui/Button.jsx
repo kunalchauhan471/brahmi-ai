@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion'
 
 const variants = {
-  primary: 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 text-black font-semibold hover:shadow-gold-lg',
-  secondary: 'glass text-luxury-light hover:text-white hover:border-gold-500/20',
-  ghost: 'text-luxury-text hover:text-white hover:bg-white/5',
-  outline: 'border border-luxury-border text-luxury-light hover:border-gold-500/30 hover:text-white',
-  danger: 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20',
+  primary: 'bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30',
+  secondary: 'bg-white text-gray-700 border border-gray-200 font-semibold hover:bg-gray-50',
+  ghost: 'text-gray-500 hover:text-gray-900 hover:bg-gray-50',
+  outline: 'border border-gray-300 text-gray-700 hover:border-primary-400 hover:text-primary-600',
+  danger: 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100',
+  success: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl',
 }
 
 const sizes = {
@@ -15,16 +16,16 @@ const sizes = {
   xl: 'px-10 py-5 text-lg',
 }
 
-export default function Button({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  className = '', 
+export default function Button({
+  children,
+  variant = 'primary',
+  size = 'md',
+  className = '',
   icon: Icon,
   iconRight: IconRight,
   loading = false,
   disabled = false,
-  ...props 
+  ...props
 }) {
   return (
     <motion.button
@@ -32,7 +33,6 @@ export default function Button({
         relative inline-flex items-center justify-center gap-2
         rounded-xl font-medium
         transition-all duration-300 ease-out
-        btn-premium
         ${variants[variant]}
         ${sizes[size]}
         ${disabled || loading ? 'opacity-50 cursor-not-allowed' : ''}
