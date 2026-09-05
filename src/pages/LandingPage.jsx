@@ -120,6 +120,14 @@ export default function LandingPage() {
                 Pricing
               </motion.button>
             </Link>
+            <Link to="/login">
+              <motion.button
+                className="px-5 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                whileHover={{ scale: 1.02 }}
+              >
+                Sign In
+              </motion.button>
+            </Link>
             <Link to="/setup">
               <motion.button
                 className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-primary-500 to-teal-500 text-white rounded-xl shadow-lg shadow-primary-500/25"

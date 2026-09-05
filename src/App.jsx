@@ -1,12 +1,14 @@
 import { Routes, Route } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
 import { DataProvider } from './context/DataContext'
+import { AccountProvider } from './context/AccountContext'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { SmartwatchProvider } from './context/SmartwatchContext'
 import { EmergencyProvider } from './context/EmergencyContext'
 import { FacilityProvider } from './context/FacilityContext'
 
 import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
 import SetupPage from './pages/caregiver/SetupPage'
 import CaregiverDashboard from './pages/caregiver/CaregiverDashboard'
 import PatientDashboard from './pages/patient/PatientDashboard'
@@ -26,6 +28,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/facility" element={<FacilityPage />} />
       <Route path="/for-organizations" element={<ForOrganizationsPage />} />
@@ -48,13 +51,15 @@ export default function App() {
     <AppProvider>
       <LanguageProvider>
         <DataProvider>
-          <FacilityProvider>
-            <SmartwatchProvider>
-              <EmergencyProvider>
-                <AppRoutes />
-              </EmergencyProvider>
-            </SmartwatchProvider>
-          </FacilityProvider>
+          <AccountProvider>
+            <FacilityProvider>
+              <SmartwatchProvider>
+                <EmergencyProvider>
+                  <AppRoutes />
+                </EmergencyProvider>
+              </SmartwatchProvider>
+            </FacilityProvider>
+          </AccountProvider>
         </DataProvider>
       </LanguageProvider>
     </AppProvider>

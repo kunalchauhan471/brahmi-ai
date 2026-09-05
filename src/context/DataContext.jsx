@@ -213,6 +213,7 @@ export function DataProvider({ children }) {
     removeMemory,
     games,
     completedGames,
+    setCompletedGames,
     completeGame,
     updateGameProgress,
     patientMode,

@@ -1,12 +1,14 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Users, Calendar, Clock, Gamepad2,
   Camera, Heart, TrendingUp, Activity, Pill, UtensilsCrossed,
   Bell, Moon, Settings, ChevronRight, Star, BarChart3,
-  Watch, Wifi, WifiOff, Battery, Shield, AlertTriangle, Brain, Sparkles, Footprints, Flame
+  Watch, Wifi, WifiOff, Battery, Shield, AlertTriangle, Brain, Sparkles, Footprints, Flame, User
 } from 'lucide-react'
 import { useData } from '../../context/DataContext'
+import { useAccount } from '../../context/AccountContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { useSmartwatch } from '../../context/SmartwatchContext'
 import Card from '../../components/ui/Card'
@@ -66,6 +68,75 @@ const gameStats = [
   { name: 'Culture Match', played: 5, best: 70, icon: Star, color: 'from-cyan-500 to-blue-600' },
 ]
 
+function AccountMenu() {
+  const navigate = useNavigate()
+  const { user, cloudMode, signOut } = useAccount()
+  const [open, setOpen] = useState(false)
+  const initial = user && user.name ? user.name.trim()[0].toUpperCase() : null
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl hover:bg-gray-100 transition-colors"
+        title={user ? 'Account' : 'Sign in'}
+      >
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center shadow-sm flex-shrink-0">
+          {initial || <User size={15} />}
+        </div>
+        <div className="hidden sm:block text-left">
+          <div className="text-xs font-semibold text-gray-800 leading-tight max-w-[110px] truncate">
+            {user ? user.name : 'Sign in'}
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-gray-400 leading-tight mt-0.5">
+            <span className={`w-1.5 h-1.5 rounded-full ${user ? 'bg-emerald-400' : 'bg-gray-300'}`} />
+            {user ? (cloudMode ? 'Cloud synced' : 'This device') : 'Not signed in'}
+          </div>
+        </div>
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-11 z-40 w-64 glass-strong rounded-2xl p-4 shadow-card animate-slide-up">
+            {user ? (
+              <div>
+                <div className="text-sm font-bold text-gray-900 truncate">{user.name}</div>
+                <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                <div className="mt-3 flex items-center gap-1.5 text-[11px] text-gray-500 bg-gray-50 rounded-lg px-2.5 py-2">
+                  <span className={`w-1.5 h-1.5 rounded-full ${cloudMode ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                  {cloudMode
+                    ? 'Data syncs to the cloud — sign in anywhere to see it.'
+                    : 'Data is saved on this device. Connect cloud sync for any-phone access.'}
+                </div>
+                <button
+                  onClick={() => { setOpen(false); signOut() }}
+                  className="mt-3 w-full py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="text-sm font-semibold text-gray-900">Access from any phone</div>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  Create a free account and sign in from another device to see this dashboard there too.
+                </p>
+                <button
+                  onClick={() => { setOpen(false); navigate('/login?next=/caregiver') }}
+                  className="mt-3 w-full py-2 rounded-lg bg-gradient-to-r from-primary-500 to-teal-500 text-white text-sm font-semibold shadow-md shadow-primary-500/20"
+                >
+                  Sign in / Create account
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function CaregiverDashboard() {
   const navigate = useNavigate()
   const { patientData, schedule, memories, completedGames } = useData()
@@ -98,12 +169,15 @@ export default function CaregiverDashboard() {
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => navigate('/patient')}
-              className="px-4 py-2 rounded-xl bg-primary-50 text-primary-600 font-medium text-sm hover:bg-primary-100 transition-colors"
-            >
-              {t('caregiver.dashboard.patientView')}
-            </button>
+            <div className="flex items-center gap-2">
+              <AccountMenu />
+              <button
+                onClick={() => navigate('/patient')}
+                className="px-4 py-2 rounded-xl bg-primary-50 text-primary-600 font-medium text-sm hover:bg-primary-100 transition-colors"
+              >
+                {t('caregiver.dashboard.patientView')}
+              </button>
+            </div>
           </div>
         </div>
       </div>
