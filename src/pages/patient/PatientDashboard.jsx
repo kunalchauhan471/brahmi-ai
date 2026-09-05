@@ -55,7 +55,7 @@ export default function PatientDashboard() {
 
   const handleReminder = useCallback((reminder) => {
     setReminderMessage(reminder)
-    setTimeout(() => setReminderMessage(null), 5000)
+    setTimeout(() => setReminderMessage(null), 8000)
   }, [])
 
   useScheduleReminder(schedule, handleReminder)
@@ -134,16 +134,22 @@ export default function PatientDashboard() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary-500 to-teal-500 text-white shadow-lg shadow-primary-500/25"
-            >
-              <div className="flex items-center gap-3">
+            >                <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                   <Bell size={20} className="text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold">{t('patient.reminder', { title: reminderMessage.title })}</div>
-                  {reminderMessage.notes && (
-                    <div className="text-sm text-white/80">{reminderMessage.notes}</div>
-                  )}
+                  <div className="font-semibold">
+                    {reminderMessage.stage === '1h' && '🕐 '}
+                    {reminderMessage.stage === '30m' && '⏰ '}
+                    {t('patient.reminder', { title: reminderMessage.title })}
+                  </div>
+                  <div className="text-sm text-white/85">
+                    {reminderMessage.stage === '1h' && `Reminding you early — it's in about an hour.`}
+                    {reminderMessage.stage === '30m' && `Coming up in 30 minutes.`}
+                    {reminderMessage.stage === 'now' && `It's time now.`}
+                    {reminderMessage.notes && ` ${reminderMessage.notes}`}
+                  </div>
                 </div>
               </div>
             </motion.div>

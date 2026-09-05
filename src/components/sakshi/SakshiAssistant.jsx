@@ -160,20 +160,31 @@ export default function SakshiAssistant({ triggerReminder }) {
     }
   }, [])
 
-  // Handle scheduled reminders
+  // Handle scheduled reminders — fires at 1 hour before, 30 min before, and at the time
   useEffect(() => {
-    if (triggerReminder) {
-      setIsOpen(true)
-      const name = patientData.name || 'there'
+    if (!triggerReminder) return
+    setIsOpen(true)
+    const name = patientData.name || 'there'
+    const stage = triggerReminder.stage || 'now'
+    const title = triggerReminder.title
+    const notes = triggerReminder.notes || ''
+
+    let text = ''
+    if (stage === '1h') {
+      text = `Hey ${name}, just a friendly early reminder that ${title} is coming up in about an hour. 😊\n\n${notes ? notes + ' ' : ''}I'll remind you again closer to the time!`
+    } else if (stage === '30m') {
+      text = `${name}, ${title} is in 30 minutes. ⏰ ${notes ? notes : ''}\n\nGetting ready can help — I'll remind you when it's time!`
+    } else {
+      // Stage 'now' — the actual reminder
       const messages = [
-        t('sakshi.reminderMessages.0', { name, title: triggerReminder.title }),
-        t('sakshi.reminderMessages.1', { name, title: triggerReminder.title, notes: triggerReminder.notes || '' }),
-        t('sakshi.reminderMessages.2', { name, title: triggerReminder.title, notes: triggerReminder.notes || '' }),
-        t('sakshi.reminderMessages.3', { name, title: triggerReminder.title, notes: triggerReminder.notes || '' }),
+        t('sakshi.reminderMessages.0', { name, title }),
+        t('sakshi.reminderMessages.1', { name, title, notes }),
+        t('sakshi.reminderMessages.2', { name, title, notes }),
+        t('sakshi.reminderMessages.3', { name, title, notes }),
       ]
-      const text = messages[Math.floor(Math.random() * messages.length)]
-      addBotMessage(text, 300)
+      text = messages[Math.floor(Math.random() * messages.length)]
     }
+    addBotMessage(text, 300)
   }, [triggerReminder])
 
   // Greet on first open
