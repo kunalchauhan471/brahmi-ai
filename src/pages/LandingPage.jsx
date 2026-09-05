@@ -8,6 +8,8 @@ import {
 } from 'lucide-react'
 import BrahmiLogo from '../components/ui/BrahmiLogo'
 import ThemeToggle from '../components/ui/ThemeToggle'
+import { useAccount } from '../context/AccountContext'
+import { useData } from '../context/DataContext'
 
 const features = [
   {
@@ -67,6 +69,10 @@ function ScrollProgress() {
 }
 
 export default function LandingPage() {
+  const { user } = useAccount()
+  const { patientData, hasCompletedSetup } = useData()
+  const firstName = user && user.name ? user.name.trim().split(' ')[0] : ''
+
   return (
     <div className="homepage min-h-screen bg-mesh overflow-hidden">
       {/* Scroll progress bar (homepage only) */}
@@ -197,33 +203,131 @@ export default function LandingPage() {
             <span className="text-gray-700 font-medium"> One caregiver setup. Daily patient engagement.</span>
           </motion.p>
 
-          <motion.div
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Link to="/setup">
-              <motion.button
-                className="group px-8 py-4 bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold rounded-2xl shadow-xl shadow-primary-500/25 flex items-center gap-2"
-                whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(14, 165, 233, 0.2)' }}
-                whileTap={{ scale: 0.98 }}
-              >
-                I'm a Caregiver
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
-            </Link>
-            <Link to="/patient">
-              <motion.button
-                className="group px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-2xl flex items-center gap-2 hover:border-primary-300 transition-colors"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                I'm a Patient
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
-            </Link>
-          </motion.div>
+          {user ? (
+            /* ---------- Personalized welcome for signed-in users ---------- */
+            <motion.div
+              key={user.email}
+              className="mt-10 mx-auto max-w-2xl glass-strong rounded-3xl p-6 sm:p-7 text-left shadow-card"
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              {user.role === 'patient' ? (
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-teal-500 text-white flex items-center justify-center text-lg font-bold shadow-lg shadow-primary-500/25 flex-shrink-0">
+                      {firstName[0] || 'P'}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-gray-900">Welcome back, {firstName || 'dear'}!</h2>
+                        <span className="px-2 py-0.5 rounded-full bg-primary-50 text-primary-600 text-[10px] font-semibold">Patient</span>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        Your memories, games and Sakshi are ready for you today.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                    <Link to="/patient" className="flex-1">
+                      <motion.button
+                        className="w-full px-6 py-3 bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 flex items-center justify-center gap-2"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        Open My Dashboard
+                        <ArrowRight size={16} />
+                      </motion.button>
+                    </Link>
+                    <Link to="/games" className="flex-1">
+                      <motion.button
+                        className="w-full px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl flex items-center justify-center gap-2 hover:border-primary-300 transition-colors"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Gamepad2 size={16} />
+                        Play Games
+                      </motion.button>
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-teal-500 text-white flex items-center justify-center text-lg font-bold shadow-lg shadow-primary-500/25 flex-shrink-0">
+                      {firstName[0] || 'C'}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-gray-900">Welcome back, {firstName || 'caregiver'}!</h2>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-semibold">Caregiver</span>
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {hasCompletedSetup
+                          ? `You're caring for ${patientData.name || 'your loved one'} — everything is ready.`
+                          : 'Complete your one-time setup and the patient experience is ready in minutes.'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                    <Link to={hasCompletedSetup ? '/caregiver' : '/setup'} className="flex-1">
+                      <motion.button
+                        className="w-full px-6 py-3 bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/25 flex items-center justify-center gap-2"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {hasCompletedSetup ? 'Open Caregiver Dashboard' : 'Start Setup'}
+                        <ArrowRight size={16} />
+                      </motion.button>
+                    </Link>
+                    <Link to="/patient" className="flex-1">
+                      <motion.button
+                        className="w-full px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl flex items-center justify-center gap-2 hover:border-primary-300 transition-colors"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        View Patient Dashboard
+                      </motion.button>
+                    </Link>
+                    {hasCompletedSetup && (
+                      <Link to="/setup" className="flex items-center justify-center px-4 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
+                        Edit Setup
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ) : (
+            /* ---------- First-time visitors / guests ---------- */
+            <motion.div
+              className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Link to="/setup">
+                <motion.button
+                  className="group px-8 py-4 bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold rounded-2xl shadow-xl shadow-primary-500/25 flex items-center gap-2"
+                  whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(14, 165, 233, 0.2)' }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  I'm a Caregiver
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </Link>
+              <Link to="/patient">
+                <motion.button
+                  className="group px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-2xl flex items-center gap-2 hover:border-primary-300 transition-colors"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  I'm a Patient
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </Link>
+            </motion.div>
+          )}
 
           <motion.div
             className="mt-16 flex flex-wrap items-center justify-center gap-8 md:gap-12"
