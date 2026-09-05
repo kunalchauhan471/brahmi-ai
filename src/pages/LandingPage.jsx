@@ -1,448 +1,332 @@
-import { useState, useEffect, useRef } from 'react'
-import { motion, useScroll, useTransform, useInView } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Brain,
-  Heart,
-  Camera,
-  Calendar,
-  WifiOff,
-  ArrowRight,
-  Sparkles,
-  Shield,
-  Clock,
-  Users,
-  ChevronRight,
+  Brain, Heart, Shield, Smartphone, ArrowRight, Play,
+  Users, Camera, Calendar, Gamepad2, Clock, Sparkles,
+  ChevronRight, Check, Globe, Star, ArrowUpRight
 } from 'lucide-react'
-import { useLanguage } from '../i18n/LanguageContext'
-import InteractiveBackground from '../components/effects/InteractiveBackground'
-import MagneticButton from '../components/effects/MagneticButton'
-import TiltCard from '../components/effects/TiltCard'
-import GradientBorder from '../components/effects/GradientBorder'
-import TextScramble from '../components/effects/TextScramble'
 import BrahmiLogo from '../components/ui/BrahmiLogo'
 
-/* ── Animated counter hook ── */
-function useCountUp(end, duration = 2000, startOnView = true) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
-  const hasRun = useRef(false)
-
-  useEffect(() => {
-    if (!startOnView || !isInView || hasRun.current) return
-    hasRun.current = true
-    const numeric = parseInt(end.replace(/[^0-9]/g, ''), 10)
-    const suffix = end.replace(/[0-9]/g, '')
-    let start = 0
-    const step = numeric / (duration / 16)
-    const timer = setInterval(() => {
-      start += step
-      if (start >= numeric) {
-        setCount(end)
-        clearInterval(timer)
-      } else {
-        setCount(Math.floor(start) + suffix)
-      }
-    }, 16)
-    return () => clearInterval(timer)
-  }, [isInView, end, duration, startOnView])
-
-  return { ref, count }
-}
-
-/* ── Floating orb for hero background ── */
-function FloatingOrb({ className, delay = 0 }) {
-  return (
-    <motion.div
-      className={`absolute rounded-full blur-3xl pointer-events-none ${className}`}
-      animate={{
-        y: [0, -30, 0, 20, 0],
-        x: [0, 15, -10, 5, 0],
-        scale: [1, 1.1, 0.95, 1.05, 1],
-      }}
-      transition={{
-        duration: 12,
-        repeat: Infinity,
-        delay,
-        ease: 'easeInOut',
-      }}
-    />
-  )
-}
-
-/* ── Slide-in direction variants ── */
-const slideFromLeft = {
-  hidden: { opacity: 0, x: -60, rotateY: -5 },
-  visible: { opacity: 1, x: 0, rotateY: 0 },
-}
-
-const slideFromRight = {
-  hidden: { opacity: 0, x: 60, rotateY: 5 },
-  visible: { opacity: 1, x: 0, rotateY: 0 },
-}
-
-const fadeUp = {
-  initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0 },
-}
-
-const stagger = {
-  animate: {
-    transition: {
-      staggerChildren: 0.12,
-    },
+const features = [
+  {
+    icon: Gamepad2,
+    title: 'Personalized Memory Games',
+    description: '6 cognitive games using family photos, familiar faces, and daily routines to keep minds active.',
   },
-}
-
-const statsData = [
-  { value: '55M+', labelKey: 'landing.stat1Label' },
-  { value: '10M', labelKey: 'landing.stat2Label' },
-  { value: '60%', labelKey: 'landing.stat3Label' },
+  {
+    icon: Camera,
+    title: 'Family Memory Vault',
+    description: 'Upload family photos and memories. The app creates personalized activities from real relationships.',
+  },
+  {
+    icon: Calendar,
+    title: 'Daily Routine Assistance',
+    description: 'Smart reminders for medicine, meals, walks, and sleep — all spoken by Sakshi AI.',
+  },
+  {
+    icon: Globe,
+    title: '11 Indian Languages',
+    description: 'Hindi, Assamese, Bengali, Manipuri, Mizo, Khasi, Garo, Nepali, Bodo, Kokborok, and English.',
+  },
+  {
+    icon: Heart,
+    title: 'Smartwatch Health Monitor',
+    description: 'Real-time heart rate, steps, and health alerts. Sakshi proactively cares for the patient.',
+  },
+  {
+    icon: Shield,
+    title: 'Emergency Response System',
+    description: 'One-tap emergency with WhatsApp, SMS, phone call, and live GPS location to caregivers.',
+  },
 ]
 
-const featureConfigs = [
-  { icon: Sparkles, titleKey: 'landing.feature1Title', descKey: 'landing.feature1Desc', color: 'from-blue-500 to-indigo-600', bgColor: 'bg-blue-50', iconColor: 'text-blue-600' },
-  { icon: Camera, titleKey: 'landing.feature2Title', descKey: 'landing.feature2Desc', color: 'from-rose-500 to-pink-600', bgColor: 'bg-rose-50', iconColor: 'text-rose-600' },
-  { icon: Calendar, titleKey: 'landing.feature3Title', descKey: 'landing.feature3Desc', color: 'from-amber-500 to-orange-600', bgColor: 'bg-amber-50', iconColor: 'text-amber-600' },
-  { icon: WifiOff, titleKey: 'landing.feature4Title', descKey: 'landing.feature4Desc', color: 'from-emerald-500 to-teal-600', bgColor: 'bg-emerald-50', iconColor: 'text-emerald-600' },
-  { icon: Shield, titleKey: 'landing.feature5Title', descKey: 'landing.feature5Desc', color: 'from-violet-500 to-purple-600', bgColor: 'bg-violet-50', iconColor: 'text-violet-600' },
-  { icon: Users, titleKey: 'landing.feature6Title', descKey: 'landing.feature6Desc', color: 'from-cyan-500 to-blue-600', bgColor: 'bg-cyan-50', iconColor: 'text-cyan-600' },
+const steps = [
+  { num: '01', title: 'Caregiver Setup', desc: 'Upload family photos, set schedule, add emergency contacts' },
+  { num: '02', title: 'Patient Onboarding', desc: 'Patient gets their personalized dashboard with Sakshi AI' },
+  { num: '03', title: 'Daily Engagement', desc: 'Games, reminders, health monitoring, and emergency support' },
 ]
 
-const stepsConfigs = [
-  { step: '01', titleKey: 'landing.step1Title', descKey: 'landing.step1Desc', icon: Heart },
-  { step: '02', titleKey: 'landing.step2Title', descKey: 'landing.step2Desc', icon: Brain },
-  { step: '03', titleKey: 'landing.step3Title', descKey: 'landing.step3Desc', icon: Clock },
+const stats = [
+  { value: '6', label: 'Cognitive Games' },
+  { value: '11', label: 'Languages' },
+  { value: '24/7', label: 'Sakshi AI Support' },
+  { value: '3', label: 'Emergency Channels' },
 ]
-
-function StatCard({ stat, index, t }) {
-  const { ref, count } = useCountUp(stat.value, 2000)
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ delay: index * 0.15, duration: 0.5 }}
-      className="text-center"
-    >
-      <div className="text-3xl font-bold gradient-text">{count || stat.value}</div>
-      <div className="text-sm text-gray-400 mt-1">{t(stat.labelKey)}</div>
-    </motion.div>
-  )
-}
 
 export default function LandingPage() {
-  const { t } = useLanguage()
-  const navigate = useNavigate()
-  const heroRef = useRef(null)
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  })
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 100])
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-
   return (
-    <InteractiveBackground>
-      {/* ── Hero Section ── */}
-      <section ref={heroRef} className="relative pt-24 pb-20 sm:pt-32 sm:pb-28 px-4 overflow-hidden">
-        {/* Floating orbs */}
-        <FloatingOrb className="w-96 h-96 bg-primary-400/8 top-0 left-10" delay={0} />
-        <FloatingOrb className="w-72 h-72 bg-teal-400/8 top-20 right-20" delay={2} />
-        <FloatingOrb className="w-60 h-60 bg-primary-300/6 bottom-0 left-1/3" delay={4} />
+    <div className="min-h-screen bg-mesh overflow-hidden">
+      {/* Navigation */}
+      <motion.nav
+        className="fixed top-0 left-0 right-0 z-50 glass shadow-sm"
+        initial={{ y: -80 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <BrahmiLogo size={36} />
+            <span className="text-xl font-bold text-gray-900">
+              Brahmi <span className="text-primary-500">AI</span>
+            </span>
+          </div>
 
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.015] pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(circle, #0ea5e9 1px, transparent 1px)',
-            backgroundSize: '30px 30px',
-          }}
-        />
-
-        <motion.div
-          style={{ y: heroY, opacity: heroOpacity }}
-          initial="initial"
-          animate="animate"
-          variants={stagger}
-          className="max-w-5xl mx-auto text-center relative"
-        >
-          {/* Badge */}
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 border border-primary-100 mb-8">
-            <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />              <span className="text-sm font-medium text-primary-700">{t('landing.badge')}</span>
-          </motion.div>
-
-          {/* Title */}
-          <motion.div variants={fadeUp} className="flex items-center justify-center gap-3 mb-6">
-            <BrahmiLogo size={48} />
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-              <span className="text-gray-900">Brahmi</span>
-              <span className="text-primary-500 ml-1">AI</span>
-            </h1>
-          </motion.div>
-
-          {/* Subtitle */}
-          <motion.p
-            variants={fadeUp}
-            className="text-xl sm:text-2xl text-gray-500 max-w-3xl mx-auto mb-4 font-light"
-          >
-            {t('landing.title')}
-          </motion.p>
-
-          <motion.p
-            variants={fadeUp}
-            className="text-base text-gray-400 max-w-2xl mx-auto mb-12"
-          >
-            {t('landing.subtitle')}
-          </motion.p>
-
-          {/* CTA Buttons */}
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <motion.button
-              whileHover={{ scale: 1.03, y: -2, boxShadow: '0 25px 50px -12px rgba(14,165,233,0.35)' }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate('/payment')}
-              className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold text-lg shadow-xl shadow-primary-500/25 transition-shadow overflow-hidden"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-primary-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-              <span className="relative flex items-center gap-3">
-                <Heart size={22} />
-                {t('landing.imCaregiver')}
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </span>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.03, y: -2, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)' }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate('/patient')}
-              className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white text-gray-700 font-semibold text-lg border border-gray-200 shadow-lg hover:shadow-xl hover:border-primary-200 transition-all"
-            >
-              <Brain size={22} className="text-primary-500" />
-              {t('landing.imPatient')}
-              <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </motion.button>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            {statsData.map((stat, i) => (
-              <StatCard key={i} stat={stat} index={i} t={t} />
+          <div className="hidden md:flex items-center gap-8">
+            {['Features', 'How It Works', 'Contact'].map((item) => (
+              <a key={item} href={`#${item.toLowerCase().replace(/\s/g, '-')}`} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                {item}
+              </a>
             ))}
-          </motion.div>
-        </motion.div>
-      </section>
+          </div>
 
-      {/* ── Features Section ── */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center gap-3">
+            <Link to="/payment">
+              <motion.button
+                className="px-5 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                whileHover={{ scale: 1.02 }}
+              >
+                Pricing
+              </motion.button>
+            </Link>
+            <Link to="/setup">
+              <motion.button
+                className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-primary-500 to-teal-500 text-white rounded-xl shadow-lg shadow-primary-500/25"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Get Started
+              </motion.button>
+            </Link>
+          </div>
+        </div>
+      </motion.nav>
+
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center pt-16">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            <motion.div
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="w-16 h-1 rounded-full bg-gradient-to-r from-primary-500 to-teal-500 mx-auto mb-6"
-            />
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              {t('landing.featuresTitle')}{' '}<span className="gradient-text">{t('landing.featuresHighlight')}</span>
-            </h2>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              {t('landing.featuresDesc')}
-            </p>
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 border border-primary-100 text-primary-700 text-xs font-medium">
+              <Sparkles className="w-3.5 h-3.5" />
+              AI-Powered Cognitive Care for Elderly Patients
+            </span>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featureConfigs.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-60px' }}
-                variants={index % 2 === 0 ? slideFromLeft : slideFromRight}
-                transition={{ duration: 0.6, delay: index * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+          <motion.h1
+            className="mt-8 text-4xl sm:text-5xl md:text-7xl font-bold text-gray-900 tracking-tight leading-tight"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Helping Dementia Patients
+            <br />
+            <span className="gradient-text">Stay Connected</span>
+            <br />
+            with Their Memories
+          </motion.h1>
+
+          <motion.p
+            className="mt-6 text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            Personalized cognitive activities using family photos, familiar memories, and daily routines.
+            <span className="text-gray-700 font-medium"> One caregiver setup. Daily patient engagement.</span>
+          </motion.p>
+
+          <motion.div
+            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Link to="/setup">
+              <motion.button
+                className="group px-8 py-4 bg-gradient-to-r from-primary-500 to-teal-500 text-white font-semibold rounded-2xl shadow-xl shadow-primary-500/25 flex items-center gap-2"
+                whileHover={{ scale: 1.03, boxShadow: '0 20px 40px rgba(14, 165, 233, 0.2)' }}
+                whileTap={{ scale: 0.98 }}
               >
-                <TiltCard className="h-full">
-                  <div className="group p-6 rounded-2xl bg-white border border-gray-100 shadow-card hover:shadow-card-hover transition-all duration-300 h-full">
-                    <motion.div
-                      whileHover={{ rotate: 10, scale: 1.1 }}
-                      transition={{ type: 'spring', stiffness: 300 }}
-                      className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4`}
-                    >
-                      <feature.icon size={24} className={feature.iconColor} />
-                    </motion.div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{t(feature.titleKey)}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">{t(feature.descKey)}</p>
+                I'm a Caregiver
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </motion.button>
+            </Link>
+            <Link to="/patient">
+              <motion.button
+                className="group px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-2xl flex items-center gap-2 hover:border-primary-300 transition-colors"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                I'm a Patient
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </motion.button>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            className="mt-16 flex flex-wrap items-center justify-center gap-8 md:gap-12"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            {stats.map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 + i * 0.1 }}
+              >
+                <div className="text-3xl font-bold gradient-text">{stat.value}</div>
+                <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section id="how-it-works" className="py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <span className="text-primary-600 text-sm font-medium tracking-wider uppercase">How It Works</span>
+            <h2 className="mt-4 text-3xl md:text-5xl font-bold text-gray-900">
+              Simple Setup, <span className="gradient-text">Daily Impact</span>
+            </h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {steps.map((step, i) => (
+              <motion.div
+                key={i}
+                className="relative p-8 rounded-2xl bg-white border border-gray-100 shadow-card hover:shadow-card-hover transition-all"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+              >
+                <div className="text-5xl font-bold gradient-text opacity-20 mb-4">{step.num}</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
+                <p className="text-gray-500 leading-relaxed">{step.desc}</p>
+                {i < steps.length - 1 && (
+                  <div className="hidden md:block absolute top-1/2 -right-4 text-gray-300">
+                    <ChevronRight size={24} />
                   </div>
-                </TiltCard>
+                )}
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── How It Works Section ── */}
-      <section className="py-20 px-4 bg-gradient-to-b from-transparent to-primary-50/30">
-        <div className="max-w-5xl mx-auto">
+      {/* Features */}
+      <section id="features" className="py-24 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
           >
-            <motion.div
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="w-16 h-1 rounded-full bg-gradient-to-r from-primary-500 to-teal-500 mx-auto mb-6"
-            />
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              {t('landing.howItWorks')} <span className="gradient-text">{t('landing.howItWorksHighlight')}</span>
+            <span className="text-primary-600 text-sm font-medium tracking-wider uppercase">Features</span>
+            <h2 className="mt-4 text-3xl md:text-5xl font-bold text-gray-900">
+              Everything Your Patient <span className="gradient-text">Needs</span>
             </h2>
-            <p className="text-lg text-gray-500">
-              {t('landing.howItWorksDesc')}
-            </p>
           </motion.div>
 
-          <div className="relative">
-            {/* Connecting line */}
-            <motion.div
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, delay: 0.5, ease: 'easeOut' }}
-              className="hidden md:block absolute top-24 left-[16.7%] right-[16.7%] h-[2px] bg-gradient-to-r from-primary-300 via-teal-400 to-primary-300 origin-left"
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {stepsConfigs.map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 40, scale: 0.9 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true, margin: '-50px' }}
-                  transition={{ duration: 0.6, delay: index * 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className="relative text-center"
-                >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    whileInView={{ scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 15, delay: index * 0.2 + 0.3 }}
-                    className="text-4xl font-bold text-primary-400 mb-4"
-                  >
-                    {item.step}
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    transition={{ type: 'spring', stiffness: 300 }}
-                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-500/20"
-                  >
-                    <item.icon size={28} className="text-white" />
-                  </motion.div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{t(item.titleKey)}</h3>
-                  <p className="text-gray-500">{t(item.descKey)}</p>
-                </motion.div>
-              ))}
-            </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, i) => (
+              <motion.div
+                key={feature.title}
+                className="p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-card-hover hover:border-primary-100 transition-all group"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -4 }}
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center mb-4 shadow-md shadow-primary-500/20 group-hover:shadow-lg group-hover:shadow-primary-500/30 transition-shadow">
+                  <feature.icon className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── Pricing CTA Section ── */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
+      {/* CTA */}
+      <section className="py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            className="p-12 rounded-3xl bg-gradient-to-br from-primary-500 to-teal-500 text-white shadow-2xl shadow-primary-500/20"
           >
-          <div className="relative rounded-3xl bg-gradient-to-br from-primary-500 to-teal-600 p-10 sm:p-14 text-center overflow-hidden">
-            {/* Floating decorative circles */}
-            <motion.div
-              animate={{ y: [-10, 10, -10], x: [-5, 5, -5] }}
-              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3"
-            />
-            <motion.div
-              animate={{ y: [10, -10, 10], x: [5, -5, 5] }}
-              transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/3 -translate-x-1/4"
-            />
-            <motion.div
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/3 rounded-full"
-            />
-
-            <div className="relative">
-              <motion.h2
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="text-3xl sm:text-4xl font-bold text-white mb-4"
-              >
-                {t('landing.ctaTitle')}
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-                className="text-primary-100 text-lg max-w-xl mx-auto mb-8"
-              >
-                {t('landing.ctaDesc')}
-              </motion.p>
-              <motion.button
-                whileHover={{ scale: 1.03, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate('/payment')}
-                className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-primary-600 font-semibold text-lg shadow-xl hover:shadow-2xl transition-shadow overflow-hidden"
-              >
-                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-primary-100/40 to-transparent" />
-                <span className="relative flex items-center gap-2">
-                  {t('landing.viewPricing')}
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </span>
-              </motion.button>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+              Ready to Help Someone Remember?
+            </h2>
+            <p className="text-lg text-white/80 max-w-xl mx-auto mb-8">
+              Start personalized cognitive care in under 10 minutes. No technical knowledge needed.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link to="/setup">
+                <motion.button
+                  className="px-8 py-4 bg-white text-primary-600 font-bold rounded-2xl shadow-xl flex items-center gap-2"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Start Free Setup
+                  <ArrowRight className="w-4 h-4" />
+                </motion.button>
+              </Link>
+              <Link to="/patient">
+                <motion.button
+                  className="px-8 py-4 bg-white/20 text-white font-semibold rounded-2xl flex items-center gap-2 border border-white/30"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Play className="w-4 h-4" />
+                  Try Patient View
+                </motion.button>
+              </Link>
             </div>
-          </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="py-12 px-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="max-w-6xl mx-auto text-center"
-        >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <BrahmiLogo size={32} />
-            <span className="text-lg font-bold text-gray-900">
-              Brahmi <span className="text-primary-500">AI</span>
-            </span>
+      {/* Footer */}
+      <footer id="contact" className="border-t border-gray-200 py-12 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2.5">
+              <BrahmiLogo size={28} />
+              <span className="text-lg font-bold text-gray-900">
+                Brahmi <span className="text-primary-500">AI</span>
+              </span>
+            </div>
+            <p className="text-sm text-gray-400">
+              © 2026 Brahmi AI. Making Memory Care Accessible.
+            </p>
+            <div className="flex items-center gap-6">
+              <a href="#" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Privacy</a>
+              <a href="#" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Terms</a>
+              <a href="#" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Contact</a>
+            </div>
           </div>
-          <p className="text-sm text-gray-400">
-            {t('landing.footerText')}
-          </p>
-        </motion.div>
+        </div>
       </footer>
-    </InteractiveBackground>
+    </div>
   )
 }

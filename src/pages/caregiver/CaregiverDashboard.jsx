@@ -472,8 +472,12 @@ export default function CaregiverDashboard() {
             <div className="flex flex-wrap gap-3">
               {memories.map((memory) => (
                 <div key={memory.id} className="flex items-center gap-2 px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${memory.color} flex items-center justify-center text-sm shadow-sm`}>
-                    {memory.emoji}
+                  <div className={`w-9 h-9 rounded-lg overflow-hidden ${memory.photo ? '' : `bg-gradient-to-br ${memory.color}`} flex items-center justify-center text-sm shadow-sm flex-shrink-0`}>
+                    {memory.photo ? (
+                      <img src={memory.photo} alt={memory.name} className="w-full h-full object-cover" />
+                    ) : (
+                      memory.emoji
+                    )}
                   </div>
                   <div>
                     <div className="text-sm font-medium text-gray-700">{memory.name}</div>

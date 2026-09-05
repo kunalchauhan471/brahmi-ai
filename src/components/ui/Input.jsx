@@ -1,44 +1,35 @@
-export default function Input({
-  label,
-  type = 'text',
-  placeholder,
-  value,
-  onChange,
-  icon: Icon,
-  className = '',
-  required = false,
-  ...props
-}) {
+import { forwardRef } from 'react'
+
+const Input = forwardRef(({ label, icon: Icon, error, className = '', ...props }, ref) => {
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-gray-700">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
+        <label className="block text-sm font-medium text-luxury-light">{label}</label>
       )}
       <div className="relative">
         {Icon && (
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Icon size={18} className="text-gray-400" />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-luxury-text">
+            <Icon className="w-4 h-4" />
           </div>
         )}
         <input
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          required={required}
+          ref={ref}
           className={`
-            w-full rounded-xl border border-gray-200 bg-white
-            px-4 py-3 text-base text-gray-900
-            placeholder:text-gray-400
-            focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400
-            transition-all duration-200
+            w-full bg-luxury-card border border-luxury-border rounded-xl
+            px-4 py-3 text-sm text-white placeholder:text-luxury-text
+            focus:outline-none focus:border-gold-500/30 focus:ring-1 focus:ring-gold-500/20
+            transition-all duration-300
             ${Icon ? 'pl-11' : ''}
+            ${error ? 'border-red-500/30' : ''}
+            ${className}
           `}
           {...props}
         />
       </div>
+      {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
   )
-}
+})
+
+Input.displayName = 'Input'
+export default Input

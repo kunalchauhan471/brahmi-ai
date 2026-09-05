@@ -1,48 +1,58 @@
 import { motion } from 'framer-motion'
 
 const variants = {
-  primary: 'bg-gradient-to-r from-primary-500 to-teal-500 text-white hover:from-primary-600 hover:to-teal-600 shadow-lg shadow-primary-500/25',
-  secondary: 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm',
-  ghost: 'bg-transparent text-gray-600 hover:bg-gray-100',
-  danger: 'bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/25',
-  success: 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/25',
+  primary: 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 text-black font-semibold hover:shadow-gold-lg',
+  secondary: 'glass text-luxury-light hover:text-white hover:border-gold-500/20',
+  ghost: 'text-luxury-text hover:text-white hover:bg-white/5',
+  outline: 'border border-luxury-border text-luxury-light hover:border-gold-500/30 hover:text-white',
+  danger: 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20',
 }
 
 const sizes = {
-  sm: 'px-4 py-2 text-sm',
-  md: 'px-6 py-3 text-base',
-  lg: 'px-8 py-4 text-lg',
-  xl: 'px-10 py-5 text-xl',
+  sm: 'px-4 py-2 text-xs',
+  md: 'px-6 py-3 text-sm',
+  lg: 'px-8 py-4 text-base',
+  xl: 'px-10 py-5 text-lg',
 }
 
-export default function Button({
-  children,
-  variant = 'primary',
-  size = 'md',
-  className = '',
-  disabled = false,
-  onClick,
-  type = 'button',
+export default function Button({ 
+  children, 
+  variant = 'primary', 
+  size = 'md', 
+  className = '', 
   icon: Icon,
-  ...props
+  iconRight: IconRight,
+  loading = false,
+  disabled = false,
+  ...props 
 }) {
   return (
     <motion.button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.98 }}
       className={`
-        inline-flex items-center justify-center gap-2 rounded-xl font-semibold
-        transition-all duration-200 cursor-pointer
-        disabled:opacity-50 disabled:cursor-not-allowed
-        ${variants[variant]} ${sizes[size]} ${className}
+        relative inline-flex items-center justify-center gap-2
+        rounded-xl font-medium
+        transition-all duration-300 ease-out
+        btn-premium
+        ${variants[variant]}
+        ${sizes[size]}
+        ${disabled || loading ? 'opacity-50 cursor-not-allowed' : ''}
+        ${className}
       `}
+      whileHover={!disabled && !loading ? { scale: 1.02 } : {}}
+      whileTap={!disabled && !loading ? { scale: 0.98 } : {}}
+      disabled={disabled || loading}
       {...props}
     >
-      {Icon && <Icon size={size === 'lg' || size === 'xl' ? 22 : 18} />}
+      {loading ? (
+        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+      ) : Icon ? (
+        <Icon className="w-4 h-4" />
+      ) : null}
       {children}
+      {IconRight && !loading && <IconRight className="w-4 h-4" />}
     </motion.button>
   )
 }

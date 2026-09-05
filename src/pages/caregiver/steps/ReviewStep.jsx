@@ -148,7 +148,13 @@ export default function ReviewStep() {
           <div className="flex flex-wrap gap-3">
             {memories.map((memory) => (
               <div key={memory.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50">
-                <span className="text-lg">{memory.emoji}</span>
+                <div className={`w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 ${memory.photo ? '' : `bg-gradient-to-br ${memory.color}`} flex items-center justify-center text-base`}>
+                  {memory.photo ? (
+                    <img src={memory.photo} alt={memory.name} className="w-full h-full object-cover" />
+                  ) : (
+                    memory.emoji
+                  )}
+                </div>
                 <span className="text-sm font-medium text-gray-700">{memory.name}</span>
                 <span className="text-xs text-gray-400">({memory.relationship})</span>
               </div>

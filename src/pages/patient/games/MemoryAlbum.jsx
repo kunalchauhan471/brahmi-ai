@@ -7,11 +7,12 @@ import {
 } from 'lucide-react'
 import { useData } from '../../../context/DataContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
+import MemoryPhoto from '../../../components/ui/MemoryPhoto'
 
 const difficulties = [
-  { level: 'Easy', options: 2, label: '2 choices' },
-  { level: 'Medium', options: 4, label: '4 choices' },
-  { level: 'Hard', options: 0, label: 'No choices' },
+  { level: 'Easy', key: 'easy', options: 2, label: '2 choices' },
+  { level: 'Medium', key: 'medium', options: 4, label: '4 choices' },
+  { level: 'Hard', key: 'hard', options: 0, label: 'No choices' },
 ]
 
 export default function MemoryAlbum() {
@@ -222,10 +223,12 @@ export default function MemoryAlbum() {
             exit={{ opacity: 0, y: -20 }}
             className="text-center"
           >
-            {/* Photo Display */}
-            <div className={`w-36 h-36 rounded-2xl bg-gradient-to-br ${question.color} flex items-center justify-center mx-auto mb-6 shadow-xl text-5xl`}>
-              {question.emoji}
-            </div>
+            {/* Photo Display — shows uploaded photo if present */}
+            <MemoryPhoto
+              memory={question}
+              className="w-40 h-40 rounded-3xl mx-auto mb-6 shadow-xl"
+              emojiClassName="text-5xl"
+            />
 
             <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('games.memoryAlbum.whoIs')}</h2>
             <p className="text-gray-400 mb-8">{t('games.memoryAlbum.tapCorrect')}</p>

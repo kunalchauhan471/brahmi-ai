@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useData } from '../../../context/DataContext'
 import { useLanguage } from '../../../i18n/LanguageContext'
+import MemoryPhoto from '../../../components/ui/MemoryPhoto'
 
 export default function FamilyFaceMatch() {
   const navigate = useNavigate()
@@ -220,9 +221,11 @@ export default function FamilyFaceMatch() {
                       }
                     `}
                   >
-                    <div className={`w-24 h-24 rounded-3xl bg-gradient-to-br ${option.color} flex items-center justify-center mx-auto mb-3 text-4xl shadow-md`}>
-                      {option.emoji}
-                    </div>
+                    <MemoryPhoto
+                      memory={option}
+                      className="w-24 h-24 rounded-3xl mx-auto mb-3 shadow-md"
+                      emojiClassName="text-4xl"
+                    />
                     <div className="font-semibold text-gray-900 text-lg">{option.name}</div>
                     <div className="text-sm text-gray-400">{option.relationship}</div>
                     {isSelected && isCorrect && (

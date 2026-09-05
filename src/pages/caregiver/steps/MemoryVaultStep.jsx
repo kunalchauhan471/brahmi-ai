@@ -50,7 +50,18 @@ export default function MemoryVaultStep() {
     description: '',
     emoji: '👨',
     color: 'from-blue-400 to-blue-600',
+    photo: null,
   })
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      setNewMemory(prev => ({ ...prev, photo: ev.target.result }))
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleAdd = () => {
     if (newMemory.name && newMemory.relationship) {
@@ -61,6 +72,7 @@ export default function MemoryVaultStep() {
         description: '',
         emoji: '👨',
         color: 'from-blue-400 to-blue-600',
+        photo: null,
       })
       setShowForm(false)
     }
@@ -100,16 +112,26 @@ export default function MemoryVaultStep() {
               className="overflow-hidden mb-6"
             >
               <div className="p-5 rounded-xl bg-gray-50 border border-gray-200 space-y-4">
-                {/* Photo placeholder */}
+                {/* Photo upload */}
                 <div className="flex items-center gap-4">
-                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${newMemory.color} flex items-center justify-center text-3xl shadow-lg`}>
-                    {newMemory.emoji}
+                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${newMemory.color} flex items-center justify-center text-3xl shadow-lg overflow-hidden`}>  
+                    {newMemory.photo ? (
+                      <img src={newMemory.photo} alt="Memory" className="w-full h-full object-cover" />
+                    ) : (
+                      newMemory.emoji
+                    )}
                   </div>
                   <div>
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                    <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
                       <ImagePlus size={16} />
-                      {t('setup.memories.uploadPhoto')}
-                    </button>
+                      {newMemory.photo ? 'Change Photo' : t('setup.memories.uploadPhoto')}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                      />
+                    </label>
                     <p className="text-xs text-gray-400 mt-1">{t('setup.memories.photoHint')}</p>
                   </div>
                 </div>
@@ -210,8 +232,12 @@ export default function MemoryVaultStep() {
                 </button>
 
                 <div className="flex items-center gap-3 mb-3">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${memory.color} flex items-center justify-center text-2xl shadow-md`}>
-                    {memory.emoji}
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${memory.color} flex items-center justify-center text-2xl shadow-md overflow-hidden flex-shrink-0`}>
+                    {memory.photo ? (
+                      <img src={memory.photo} alt={memory.name} className="w-full h-full object-cover" />
+                    ) : (
+                      memory.emoji
+                    )}
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{memory.name}</h3>
