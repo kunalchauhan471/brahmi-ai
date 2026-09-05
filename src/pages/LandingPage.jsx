@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Brain, Heart, Shield, Smartphone, ArrowRight, Play,
-  Users, Camera, Calendar, Gamepad2, Clock, Sparkles,
-  ChevronRight, Check, Globe, Star, ArrowUpRight
+  Heart, Shield, ArrowRight, Play,
+  Camera, Calendar, Gamepad2, Sparkles,
+  ChevronRight, Globe, Building2
 } from 'lucide-react'
 import BrahmiLogo from '../components/ui/BrahmiLogo'
 
@@ -81,6 +81,23 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link to="/for-organizations">
+              <motion.button
+                className="hidden md:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                whileHover={{ scale: 1.02 }}
+              >
+                <Building2 size={14} />
+                For NGOs
+              </motion.button>
+            </Link>
+            <Link to="/facility">
+              <motion.button
+                className="hidden md:block px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                whileHover={{ scale: 1.02 }}
+              >
+                Staff Login
+              </motion.button>
+            </Link>
             <Link to="/payment">
               <motion.button
                 className="px-5 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"

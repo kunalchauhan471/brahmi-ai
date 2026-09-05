@@ -4,6 +4,7 @@ import { DataProvider } from './context/DataContext'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { SmartwatchProvider } from './context/SmartwatchContext'
 import { EmergencyProvider } from './context/EmergencyContext'
+import { FacilityProvider } from './context/FacilityContext'
 
 import LandingPage from './pages/LandingPage'
 import SetupPage from './pages/caregiver/SetupPage'
@@ -11,6 +12,8 @@ import CaregiverDashboard from './pages/caregiver/CaregiverDashboard'
 import PatientDashboard from './pages/patient/PatientDashboard'
 import GameDashboard from './pages/patient/GameDashboard'
 import PaymentPage from './pages/PaymentPage'
+import FacilityPage from './pages/FacilityPage'
+import ForOrganizationsPage from './pages/ForOrganizationsPage'
 
 import MemoryAlbum from './pages/patient/games/MemoryAlbum'
 import MemoryTray from './pages/patient/games/MemoryTray'
@@ -24,6 +27,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/payment" element={<PaymentPage />} />
+      <Route path="/facility" element={<FacilityPage />} />
+      <Route path="/for-organizations" element={<ForOrganizationsPage />} />
       <Route path="/setup" element={<SetupPage />} />
       <Route path="/caregiver" element={<CaregiverDashboard />} />
       <Route path="/patient" element={<PatientDashboard />} />
@@ -43,11 +48,13 @@ export default function App() {
     <AppProvider>
       <LanguageProvider>
         <DataProvider>
-          <SmartwatchProvider>
-            <EmergencyProvider>
-              <AppRoutes />
-            </EmergencyProvider>
-          </SmartwatchProvider>
+          <FacilityProvider>
+            <SmartwatchProvider>
+              <EmergencyProvider>
+                <AppRoutes />
+              </EmergencyProvider>
+            </SmartwatchProvider>
+          </FacilityProvider>
         </DataProvider>
       </LanguageProvider>
     </AppProvider>
