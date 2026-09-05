@@ -14,6 +14,7 @@ import DailyScheduleStep from './steps/DailyScheduleStep'
 import MemoryVaultStep from './steps/MemoryVaultStep'
 import ReviewStep from './steps/ReviewStep'
 const STEPS = ['Caregiver', 'Patient', 'Emergency', 'Schedule', 'Memories', 'Review']
+const ACCOUNT_BANNER_DISMISSED_KEY = 'brahmi_account_banner_dismissed'
 
 const stepComponents = [
   CaregiverInfoStep,
@@ -26,7 +27,9 @@ const stepComponents = [
 
 export default function SetupPage() {
   const [currentStep, setCurrentStep] = useState(0)
-  const [showAccountBanner, setShowAccountBanner] = useState(true)
+  const [showAccountBanner, setShowAccountBanner] = useState(() => {
+    try { return localStorage.getItem(ACCOUNT_BANNER_DISMISSED_KEY) !== '1' } catch { return true }
+  })
   const navigate = useNavigate()
   const { t } = useLanguage()
   const { setPatientMode } = useData()
@@ -77,39 +80,28 @@ export default function SetupPage() {
         </div>
       </div>
 
-      {/* Account upsell banner — only when no account is signed in on this device */}
-      {!user && showAccountBanner && (
+      {/* Account upsell hint — compact, only on the first step, dismissible forever */}
+      {currentStep === 0 && !user && showAccountBanner && (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6">
-          <div className="flex items-start gap-3 p-4 rounded-2xl bg-gradient-to-r from-primary-50 to-teal-50 border border-primary-100">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800">
-                Create a free account to keep this setup on any phone
-              </p>
-              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                Right now this data is saved only on this device. With an account, the caregiver can open the same
-                schedule, memories and patient profile after signing in from another phone.
-              </p>
-              <div className="flex items-center gap-3 mt-2.5">
-                <button
-                  onClick={() => navigate('/login?next=/setup')}
-                  className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-primary-500 to-teal-500 text-white text-xs font-semibold shadow-md shadow-primary-500/20 hover:shadow-lg transition-shadow"
-                >
-                  Create free account
-                </button>
-                <button
-                  onClick={() => setShowAccountBanner(false)}
-                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  Maybe later
-                </button>
-              </div>
-            </div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 rounded-xl bg-primary-50/70 border border-primary-100">
+            <span className="text-xs font-medium text-gray-600">
+              Want to open this setup from another phone later?{' '}
+              <button
+                onClick={() => navigate('/login?next=/setup')}
+                className="text-primary-600 hover:text-primary-700 font-semibold underline underline-offset-2"
+              >
+                Create a free account
+              </button>
+            </span>
+            <button
+              onClick={() => {
+                setShowAccountBanner(false)
+                try { localStorage.setItem(ACCOUNT_BANNER_DISMISSED_KEY, '1') } catch { /* ignore */ }
+              }}
+              className="ml-auto text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Don't show again
+            </button>
           </div>
         </div>
       )}
