@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion'
 import {
   Heart, Shield, ArrowRight, Play,
   Camera, Calendar, Gamepad2, Sparkles,
@@ -54,9 +54,23 @@ const stats = [
   { value: '3', label: 'Emergency Channels' },
 ]
 
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll()
+  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, restDelta: 0.001 })
+  return (
+    <motion.div
+      className="fixed top-0 left-0 right-0 z-[60] h-1 origin-left bg-gradient-to-r from-primary-500 via-teal-400 to-primary-500"
+      style={{ scaleX }}
+    />
+  )
+}
+
 export default function LandingPage() {
   return (
     <div className="homepage min-h-screen bg-mesh overflow-hidden">
+      {/* Scroll progress bar (homepage only) */}
+      <ScrollProgress />
+
       {/* Navigation */}
       <motion.nav
         className="fixed top-0 left-0 right-0 z-50 glass shadow-sm"
@@ -242,12 +256,12 @@ export default function LandingPage() {
             {steps.map((step, i) => (
               <motion.div
                 key={i}
-                className="relative overflow-hidden p-8 rounded-2xl bg-white border border-gray-100 shadow-card hover:shadow-card-hover gradient-ring transition-all group"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                whileHover={{ y: -4 }}
+                className="relative overflow-hidden p-8 rounded-2xl bg-white border border-gray-100 shadow-card hover:shadow-card-hover gradient-ring transition-shadow duration-300 group"
+                initial={{ opacity: 0, y: 30, scale: 0.96 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ delay: i * 0.12, duration: 0.5, ease: 'easeOut' }}
+                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 24px 48px -12px rgba(14, 165, 233, 0.18), 0 8px 20px -8px rgba(0, 0, 0, 0.08)' }}
               >
                 {/* Top accent line on hover */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 via-teal-400 to-primary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -295,18 +309,20 @@ export default function LandingPage() {
             {features.map((feature, i) => (
               <motion.div
                 key={feature.title}
-                className="p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-card-hover hover:border-primary-100 transition-all group"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -4 }}
+                className="group relative p-6 rounded-2xl bg-white border border-gray-200/70 shadow-card hover:border-primary-200 transition-colors duration-300 gradient-ring"
+                initial={{ opacity: 0, y: 30, scale: 0.96 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ delay: i * 0.08, duration: 0.45, ease: 'easeOut' }}
+                whileHover={{ y: -6, scale: 1.02, boxShadow: '0 20px 40px -12px rgba(14, 165, 233, 0.16), 0 6px 18px -8px rgba(0, 0, 0, 0.07)' }}
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center mb-4 shadow-md shadow-primary-500/20 group-hover:shadow-lg group-hover:shadow-primary-500/30 transition-shadow">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-teal-500 flex items-center justify-center mb-4 shadow-md shadow-primary-500/20 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary-500/40 transition-all duration-300">
                   <feature.icon className="w-5 h-5 text-white" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{feature.description}</p>
+                {/* Subtle bottom accent revealed on hover */}
+                <div className="absolute bottom-0 left-6 right-6 h-0.5 bg-gradient-to-r from-primary-500 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity duration-400 rounded-full" />
               </motion.div>
             ))}
           </div>
