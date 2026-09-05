@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
 import { DataProvider } from './context/DataContext'
-import { AccountProvider } from './context/AccountContext'
+import { AccountProvider, useAccount } from './context/AccountContext'
 import { LanguageProvider } from './i18n/LanguageContext'
 import { SmartwatchProvider } from './context/SmartwatchContext'
 import { EmergencyProvider } from './context/EmergencyContext'
@@ -24,10 +24,23 @@ import RoutineSequencer from './pages/patient/games/RoutineSequencer'
 import WhatChanged from './pages/patient/games/WhatChanged'
 import LocalCultureMatch from './pages/patient/games/LocalCultureMatch'
 
+/**
+ * App entry gate: signing in / signing up as a Patient or Caregiver comes
+ * FIRST, then the homepage appears. Guests may continue without an account.
+ */
+function HomeGate() {
+  const { user } = useAccount()
+  const isGuest = (() => {
+    try { return localStorage.getItem('brahmi_guest') === '1' } catch { return false }
+  })()
+  if (!user && !isGuest) return <LoginPage asGate />
+  return <LandingPage />
+}
+
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<HomeGate />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/facility" element={<FacilityPage />} />

@@ -14,6 +14,7 @@ export const useAccount = () => {
 const ACCOUNTS_KEY = 'brahmi_accounts'
 const SESSION_KEY = 'brahmi_session'
 const LEGACY_DATA_KEY = 'brahmi_data'
+const GUEST_KEY = 'brahmi_guest'
 
 const accountDataKey = (email) => `brahmi_data_${(email || '').toLowerCase().trim()}`
 
@@ -164,6 +165,7 @@ export function AccountProvider({ children }) {
     const account = { name: name.trim(), email: cleanEmail, password, role, provider, createdAt: new Date().toISOString() }
     setAccounts(prev => [...prev, account])
     setUser({ name: account.name, email: cleanEmail, role, provider })
+    try { localStorage.removeItem(GUEST_KEY) } catch { /* ignore */ }
 
     // Pull in existing data (new account on a device that already has setup done).
     const source = await resolveSourceData(cleanEmail, role)
@@ -188,6 +190,7 @@ export function AccountProvider({ children }) {
     }
 
     setUser({ name: account.name, email: cleanEmail, role: account.role, provider })
+    try { localStorage.removeItem(GUEST_KEY) } catch { /* ignore */ }
     const source = await resolveSourceData(cleanEmail, account.role)
     if (source) hydrate(source)
     return { ok: true }
@@ -198,6 +201,7 @@ export function AccountProvider({ children }) {
     if (cloudMode) {
       try { await getSupabase().auth.signOut() } catch { /* ignore */ }
     }
+    try { localStorage.removeItem(GUEST_KEY) } catch { /* ignore */ }
     setUser(null)
   }, [user, cloudMode]) // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { useData } from '../../context/DataContext'
-import { useAccount } from '../../context/AccountContext'
 import StepIndicator from '../../components/ui/StepIndicator'
 import BrahmiLogo from '../../components/ui/BrahmiLogo'
 import CaregiverInfoStep from './steps/CaregiverInfoStep'
@@ -14,7 +13,6 @@ import DailyScheduleStep from './steps/DailyScheduleStep'
 import MemoryVaultStep from './steps/MemoryVaultStep'
 import ReviewStep from './steps/ReviewStep'
 const STEPS = ['Caregiver', 'Patient', 'Emergency', 'Schedule', 'Memories', 'Review']
-const ACCOUNT_BANNER_DISMISSED_KEY = 'brahmi_account_banner_dismissed'
 
 const stepComponents = [
   CaregiverInfoStep,
@@ -27,13 +25,9 @@ const stepComponents = [
 
 export default function SetupPage() {
   const [currentStep, setCurrentStep] = useState(0)
-  const [showAccountBanner, setShowAccountBanner] = useState(() => {
-    try { return localStorage.getItem(ACCOUNT_BANNER_DISMISSED_KEY) !== '1' } catch { return true }
-  })
   const navigate = useNavigate()
   const { t } = useLanguage()
   const { setPatientMode } = useData()
-  const { user } = useAccount()
 
   const StepComponent = stepComponents[currentStep]
 
@@ -79,32 +73,6 @@ export default function SetupPage() {
           <StepIndicator steps={STEPS} currentStep={currentStep} />
         </div>
       </div>
-
-      {/* Account upsell hint — compact, only on the first step, dismissible forever */}
-      {currentStep === 0 && !user && showAccountBanner && (
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 rounded-xl bg-primary-50/70 border border-primary-100">
-            <span className="text-xs font-medium text-gray-600">
-              Want to open this setup from another phone later?{' '}
-              <button
-                onClick={() => navigate('/login?next=/setup')}
-                className="text-primary-600 hover:text-primary-700 font-semibold underline underline-offset-2"
-              >
-                Create a free account
-              </button>
-            </span>
-            <button
-              onClick={() => {
-                setShowAccountBanner(false)
-                try { localStorage.setItem(ACCOUNT_BANNER_DISMISSED_KEY, '1') } catch { /* ignore */ }
-              }}
-              className="ml-auto text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              Don't show again
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Step Content */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
