@@ -12,6 +12,7 @@ import { useData } from '../../context/DataContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import Card from '../../components/ui/Card'
 import LanguageSelector from '../../components/ui/LanguageSelector'
+import ThemeToggle from '../../components/ui/ThemeToggle'
 import SakshiAssistant from '../../components/sakshi/SakshiAssistant'
 import SmartwatchFloating from '../../components/smartwatch/SmartwatchFloating'
 import SmartwatchPanel from '../../components/smartwatch/SmartwatchPanel'
@@ -112,7 +113,8 @@ export default function PatientDashboard() {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <ThemeToggle />
               <LanguageSelector compact />
               <button
                 onClick={() => navigate('/caregiver')}

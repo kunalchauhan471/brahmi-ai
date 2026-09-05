@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Heart, Mail, Lock, User, CloudOff, CheckCircle2, Loader2 } from 'lucide-react'
 import BrahmiLogo from '../components/ui/BrahmiLogo'
+import ThemeToggle from '../components/ui/ThemeToggle'
 import { useAccount } from '../context/AccountContext'
 
 const GUEST_KEY = 'brahmi_guest'
@@ -105,6 +106,7 @@ export default function LoginPage({ asGate = false }) {
           <div className="flex items-center gap-2">
             <BrahmiLogo size={32} />
             <span className="font-bold text-gray-900">Brahmi <span className="text-primary-500">AI</span></span>
+            <ThemeToggle className="ml-1" />
           </div>
         </div>
       </div>

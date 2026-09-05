@@ -7,6 +7,7 @@ import {
   ChevronRight, Globe, Building2
 } from 'lucide-react'
 import BrahmiLogo from '../components/ui/BrahmiLogo'
+import ThemeToggle from '../components/ui/ThemeToggle'
 
 const features = [
   {
@@ -95,6 +96,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Link to="/for-organizations">
               <motion.button
                 className="hidden md:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"

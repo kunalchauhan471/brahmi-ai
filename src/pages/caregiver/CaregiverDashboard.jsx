@@ -13,6 +13,7 @@ import { useLanguage } from '../../i18n/LanguageContext'
 import { useSmartwatch } from '../../context/SmartwatchContext'
 import Card from '../../components/ui/Card'
 import BrahmiLogo from '../../components/ui/BrahmiLogo'
+import ThemeToggle from '../../components/ui/ThemeToggle'
 import CaregiverEmergencyPanel from '../../components/emergency/CaregiverEmergencyPanel'
 import EmergencyHistory from '../../components/emergency/EmergencyHistory'
 import { Component } from 'react'
@@ -169,7 +170,8 @@ export default function CaregiverDashboard() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <ThemeToggle />
               <AccountMenu />
               <button
                 onClick={() => navigate('/patient')}

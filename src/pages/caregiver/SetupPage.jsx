@@ -6,6 +6,7 @@ import { useLanguage } from '../../i18n/LanguageContext'
 import { useData } from '../../context/DataContext'
 import StepIndicator from '../../components/ui/StepIndicator'
 import BrahmiLogo from '../../components/ui/BrahmiLogo'
+import ThemeToggle from '../../components/ui/ThemeToggle'
 import CaregiverInfoStep from './steps/CaregiverInfoStep'
 import PatientInfoStep from './steps/PatientInfoStep'
 import EmergencyContactStep from './steps/EmergencyContactStep'
@@ -68,6 +69,7 @@ export default function SetupPage() {
               <span className="font-bold text-gray-900">
                 {t('common.appName')}
               </span>
+              <ThemeToggle className="ml-1" />
             </div>
           </div>
           <StepIndicator steps={STEPS} currentStep={currentStep} />
