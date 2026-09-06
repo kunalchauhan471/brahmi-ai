@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Heart, Mail, Lock, User, CloudOff, CheckCircle2, Loader2 } from 'lucide-react'
@@ -23,6 +23,7 @@ export default function LoginPage({ asGate = false }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [justSignedUp, setJustSignedUp] = useState(false)
+  const signupWelcomeCache = useRef(null)
 
   const finish = () => navigate(nextPath || '/')
 
@@ -32,6 +33,9 @@ export default function LoginPage({ asGate = false }) {
     window.location.href = '/'
   }
 
+  // The account was just created — show a welcome banner on the homepage.
+  // We store the newly-created user in session storage so LandingPage can
+  // render a one-time "Welcome, <name>" state before the account settles in.
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -39,9 +43,21 @@ export default function LoginPage({ asGate = false }) {
     let res
     if (mode === 'signup') {
       res = await signUp({ name, email, password, role })
-      if (res.ok) setJustSignedUp(true)
+      if (res.ok) {
+        setJustSignedUp(true)
+        signupWelcomeCache.current = { name, role, email }
+        try {
+          sessionStorage.setItem('brahmi_welcome_user', JSON.stringify({ name, role }))
+        } catch { /* ignore */ }
+      }
     } else {
       res = await signIn(email, password)
+      if (res && res.ok) {
+        signupWelcomeCache.current = { name: res.user?.name || '', role: res.user?.role || 'caregiver', email }
+        try {
+          sessionStorage.setItem('brahmi_welcome_user', JSON.stringify({ name: res.user?.name || '', role: res.user?.role || 'caregiver' }))
+        } catch { /* ignore */ }
+      }
     }
     setBusy(false)
     if (res && !res.ok) {
@@ -49,7 +65,6 @@ export default function LoginPage({ asGate = false }) {
       return
     }
     if (mode === 'signup') {
-      // Give the "account created" state a moment so the user sees it.
       setTimeout(finish, 900)
     } else {
       finish()
@@ -131,6 +146,17 @@ export default function LoginPage({ asGate = false }) {
                     Choose who you are, then sign in or create a free account to continue.
                   </p>
                 </>
+              ) : justSignedUp ? (
+                // After sign-up: warm welcome with the name they just entered.
+                <>
+                  <div className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-500 items-center justify-center mb-4 shadow-lg shadow-emerald-500/25">
+                    <CheckCircle2 size={26} className="text-white" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-gray-900">Welcome, {name.split(' ')[0] || name || 'there'}!</h1>
+                  <p className="text-sm text-gray-500 mt-1.5">
+                    Your {role === 'patient' ? 'patient' : 'caregiver'} account is ready. Taking you to the homepage…
+                  </p>
+                </>
               ) : (
                 <>
                   <div className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-teal-500 items-center justify-center mb-4 shadow-lg shadow-primary-500/25">
@@ -140,7 +166,9 @@ export default function LoginPage({ asGate = false }) {
                     {mode === 'signup' ? 'Create your free account' : 'Welcome back'}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1.5">
-                    Sign in on any phone or tablet to open the same setup, schedule and memories.
+                    {mode === 'signup'
+                      ? 'Create your free account in seconds — then continue to the homepage.'
+                      : 'Sign in to open your setup, schedule and memories on this device.'}
                   </p>
                 </>
               )}

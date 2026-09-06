@@ -120,31 +120,45 @@ export default function LandingPage() {
                 Staff Login
               </motion.button>
             </Link>
-            <Link to="/payment">
-              <motion.button
-                className="px-5 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
-                whileHover={{ scale: 1.02 }}
-              >
-                Pricing
-              </motion.button>
-            </Link>
-            <Link to="/login">
-              <motion.button
-                className="px-5 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
-                whileHover={{ scale: 1.02 }}
-              >
-                Sign In
-              </motion.button>
-            </Link>
-            <Link to="/setup">
-              <motion.button
-                className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-primary-500 to-teal-500 text-white rounded-xl shadow-lg shadow-primary-500/25"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Get Started
-              </motion.button>
-            </Link>
+            {user ? (
+              <Link to={user.role === 'patient' ? '/patient' : (hasCompletedSetup ? '/caregiver' : '/setup')}>
+                <motion.button
+                  className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-primary-500 to-teal-500 text-white rounded-xl shadow-lg shadow-primary-500/25"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {user.role === 'patient' ? 'My Dashboard' : (hasCompletedSetup ? 'Dashboard' : 'Get Started')}
+                </motion.button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/payment">
+                  <motion.button
+                    className="px-5 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    Pricing
+                  </motion.button>
+                </Link>
+                <Link to="/login">
+                  <motion.button
+                    className="px-5 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    Sign In
+                  </motion.button>
+                </Link>
+                <Link to="/setup">
+                  <motion.button
+                    className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-primary-500 to-teal-500 text-white rounded-xl shadow-lg shadow-primary-500/25"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Get Started
+                  </motion.button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </motion.nav>
