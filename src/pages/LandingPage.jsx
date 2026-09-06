@@ -170,13 +170,13 @@ export default function LandingPage() {
                   </Link>
                 </>
               )}
-            </>}
+            </>
           </div>
         </div>
       </motion.nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center pt-16">
+      <section className="relative min-h-screen flex items-center justify-center pt-24 pb-10">
         {/* Soft floating decorative orbs (homepage only) */}
         <motion.div
           className="pointer-events-none absolute top-24 left-[8%] w-28 h-28 rounded-full bg-gradient-to-br from-primary-300/30 to-teal-300/20 blur-2xl"
@@ -199,6 +199,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
+            className="mt-4 mb-8"
           >
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 border border-primary-100 text-primary-700 text-xs font-medium">
               <Sparkles className="w-3.5 h-3.5" />

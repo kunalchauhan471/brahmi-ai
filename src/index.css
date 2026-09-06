@@ -256,12 +256,18 @@ html.dark * {
 
 /* ---------- Surfaces ---------- */
 html.dark .bg-white { background-color: #101a2c; }
+html.dark .bg-white\/95 { background-color: rgba(14, 22, 38, 0.95); }
+html.dark .bg-white\/80 { background-color: rgba(14, 22, 38, 0.82); }
 html.dark .bg-gray-50 { background-color: #0e1728; }
 html.dark .bg-gray-100 { background-color: #182236; }
 html.dark .bg-gray-200 { background-color: #243049; }
 html.dark .bg-gray-300 { background-color: #33415e; }
 html.dark .bg-slate-50 { background-color: #0e1728; }
 html.dark .bg-slate-100 { background-color: #182236; }
+
+/* Gradient stops used by smartwatch cards (gray-50 → white) */
+html.dark .from-gray-50 { --tw-gradient-from: #0e1728 !important; }
+html.dark .to-white { --tw-gradient-to: #101a2c !important; }
 
 /* ---------- Text ---------- */
 html.dark .text-gray-900 { color: #f8fafc; }

@@ -1,0 +1,11 @@
+{
+  "appId": "com.brahmi.ai",
+  "appName": "Brahmi AI",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
