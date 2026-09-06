@@ -23,19 +23,14 @@ export default function LoginPage({ asGate = false }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [justSignedUp, setJustSignedUp] = useState(false)
-  const signupWelcomeCache = useRef(null)
 
   const finish = () => navigate(nextPath || '/')
 
   const enterAsGuest = () => {
     try { localStorage.setItem(GUEST_KEY, '1') } catch { /* ignore */ }
-    // Full reload so the entry gate re-reads the guest flag from storage.
     window.location.href = '/'
   }
 
-  // The account was just created — show a welcome banner on the homepage.
-  // We store the newly-created user in session storage so LandingPage can
-  // render a one-time "Welcome, <name>" state before the account settles in.
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -45,18 +40,17 @@ export default function LoginPage({ asGate = false }) {
       res = await signUp({ name, email, password, role })
       if (res.ok) {
         setJustSignedUp(true)
-        signupWelcomeCache.current = { name, role, email }
-        try {
-          sessionStorage.setItem('brahmi_welcome_user', JSON.stringify({ name, role }))
-        } catch { /* ignore */ }
+        try { sessionStorage.setItem('brahmi_welcome_user', JSON.stringify({ name, role })) } catch {}
       }
     } else {
       res = await signIn(email, password)
       if (res && res.ok) {
-        signupWelcomeCache.current = { name: res.user?.name || '', role: res.user?.role || 'caregiver', email }
         try {
-          sessionStorage.setItem('brahmi_welcome_user', JSON.stringify({ name: res.user?.name || '', role: res.user?.role || 'caregiver' }))
-        } catch { /* ignore */ }
+          sessionStorage.setItem(
+            'brahmi_welcome_user',
+            JSON.stringify({ name: res.user?.name || '', role: res.user?.role || 'caregiver' }),
+          )
+        } catch {}
       }
     }
     setBusy(false)
@@ -103,6 +97,8 @@ export default function LoginPage({ asGate = false }) {
     </div>
   )
 
+  const greetingName = name.split(' ')[0] || name || 'there'
+
   return (
     <div className="min-h-screen bg-mesh flex flex-col">
       {/* Header */}
@@ -147,12 +143,11 @@ export default function LoginPage({ asGate = false }) {
                   </p>
                 </>
               ) : justSignedUp ? (
-                // After sign-up: warm welcome with the name they just entered.
                 <>
-                  <div className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-500 items-center justify-center mb-4 shadow-lg shadow-emerald-500/25">
+                  <div className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 items-center justify-center mb-4 shadow-lg shadow-emerald-500/25">
                     <CheckCircle2 size={26} className="text-white" />
                   </div>
-                  <h1 className="text-2xl font-bold text-gray-900">Welcome, {name.split(' ')[0] || name || 'there'}!</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">Welcome, {greetingName}!</h1>
                   <p className="text-sm text-gray-500 mt-1.5">
                     Your {role === 'patient' ? 'patient' : 'caregiver'} account is ready. Taking you to the homepage…
                   </p>
@@ -262,7 +257,7 @@ export default function LoginPage({ asGate = false }) {
 
                 {justSignedUp && (
                   <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm font-medium">
-                    <CheckCircle2 size={16} /> Account created! Taking you to the homepage…
+                    <CheckCircle2 size={16} /> Account created — welcome, {greetingName}! Taking you to the homepage…
                   </div>
                 )}
 
