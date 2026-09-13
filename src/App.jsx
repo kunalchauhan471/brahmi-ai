@@ -1,0 +1,84 @@
+import { Routes, Route } from 'react-router-dom'
+import { AppProvider } from './context/AppContext'
+import { DataProvider } from './context/DataContext'
+import { AccountProvider, useAccount } from './context/AccountContext'
+import { LanguageProvider } from './i18n/LanguageContext'
+import { SmartwatchProvider } from './context/SmartwatchContext'
+import { EmergencyProvider } from './context/EmergencyContext'
+import { FacilityProvider } from './context/FacilityContext'
+
+import { AnimatePresence } from 'framer-motion'
+import PageTransition from './components/ui/PageTransition'
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
+import SetupPage from './pages/caregiver/SetupPage'
+import CaregiverDashboard from './pages/caregiver/CaregiverDashboard'
+import PatientDashboard from './pages/patient/PatientDashboard'
+import GameDashboard from './pages/patient/GameDashboard'
+import PaymentPage from './pages/PaymentPage'
+import FacilityPage from './pages/FacilityPage'
+import ForOrganizationsPage from './pages/ForOrganizationsPage'
+
+import MemoryAlbum from './pages/patient/games/MemoryAlbum'
+import MemoryTray from './pages/patient/games/MemoryTray'
+import FamilyFaceMatch from './pages/patient/games/FamilyFaceMatch'
+import RoutineSequencer from './pages/patient/games/RoutineSequencer'
+import WhatChanged from './pages/patient/games/WhatChanged'
+import LocalCultureMatch from './pages/patient/games/LocalCultureMatch'
+
+/**
+ * App entry gate: signing in / signing up as a Patient or Caregiver comes
+ * FIRST, then the homepage appears. Guests may continue without an account.
+ */
+function HomeGate() {
+  const { user } = useAccount()
+  const isGuest = (() => {
+    try { return localStorage.getItem('brahmi_guest') === '1' } catch { return false }
+  })()
+  if (!user && !isGuest) return <LoginPage asGate />
+  return <LandingPage />
+}
+
+function AppRoutes() {
+  return (
+    <AnimatePresence mode="wait">
+      <Routes>
+        <Route path="/" element={<PageTransition><HomeGate /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        <Route path="/payment" element={<PageTransition><PaymentPage /></PageTransition>} />
+        <Route path="/facility" element={<PageTransition><FacilityPage /></PageTransition>} />
+        <Route path="/for-organizations" element={<PageTransition><ForOrganizationsPage /></PageTransition>} />
+        <Route path="/setup" element={<PageTransition><SetupPage /></PageTransition>} />
+        <Route path="/caregiver" element={<CaregiverDashboard />} />
+        <Route path="/patient" element={<PatientDashboard />} />
+        <Route path="/games" element={<GameDashboard />} />
+        <Route path="/games/1" element={<MemoryAlbum />} />
+        <Route path="/games/2" element={<MemoryTray />} />
+        <Route path="/games/3" element={<FamilyFaceMatch />} />
+        <Route path="/games/4" element={<RoutineSequencer />} />
+        <Route path="/games/5" element={<WhatChanged />} />
+        <Route path="/games/6" element={<LocalCultureMatch />} />
+      </Routes>
+    </AnimatePresence>
+  )
+}
+
+export default function App() {
+  return (
+    <AppProvider>
+      <LanguageProvider>
+        <DataProvider>
+          <AccountProvider>
+            <FacilityProvider>
+              <SmartwatchProvider>
+                <EmergencyProvider>
+                  <AppRoutes />
+                </EmergencyProvider>
+              </SmartwatchProvider>
+            </FacilityProvider>
+          </AccountProvider>
+        </DataProvider>
+      </LanguageProvider>
+    </AppProvider>
+  )
+}

@@ -1,0 +1,9 @@
+{
+  "common": { "appName": "Brahmi AI", "back": "Mendeng", "next": "Dakkam", "previous": "Agi", "cancel": "Rikma", "save": "Dakkam", "add": "Chingma", "delete": "Apeng", "edit": "Sisu", "submit": "Sisu", "confirm": "Neh", "close": "Sokma", "loading": "Loading...", "secure": "Ago", "home": "Wakhal", "pts": "Point", "points": "Point", "playAgain": "Osta keng", "backToGames": "Mendeng soko", "startGame": "Keng nang", "completed": "Jukum", "items": "Thing", "noData": "Data arik" },
+  "landing": { "badge": "Smart India Hackathon", "title": "Dementia omanik a'chik nang agok agonda agik chingma", "subtitle": "Agik ban ching agik photos agik a'chik nang ban ching omanik nang.", "imCaregiver": "Min chikta", "imPatient": "Min doktor", "featuresTitle": "Ban chingma", "featuresHighlight": "Dik ching", "howItWorks": "How it", "howItWorksHighlight": "works", "ctaTitle": "Ban nang osta agik chingma", "viewPricing": "Sut chik", "feature1Title": "Keng nang", "feature1Desc": "Agik photos agik ban ching.", "feature2Title": "A'chik nang", "feature2Desc": "Agik photos agik agik ban ching.", "step1Title": "Chikta", "step2Title": "Dik ching", "step3Title": "Nang agik" },
+  "payment": { "choosePlan": "Iban chik", "paymentSuccess": "Sut agok! 🎉", "startSetup": "Chikta nang" },
+  "setup": { "steps": ["Chikta", "Doktor", "Ago", "Sakat", "Nang", "Dakkam"], "activate": "Doktor mode nang" },
+  "patient": { "greeting": { "morning": "Sijow", "afternoon": "Sijow", "evening": "Sijow" }, "howFeeling": "Osta agik omanik min duk?", "caregiver": "Chikta", "todaySchedule": "Sakat", "funActivities": "Keng nang", "emergencyCall": "Ago SMS" },
+  "games": { "title": "Keng nang", "startGame": "Keng nang", "playAgain": "Osta keng" },
+  "sakshi": { "headerSubtitle": "Chikta", "greeting": "Min Sakshi, agik chikta. Osta agik omanik min duk?" }
+}
